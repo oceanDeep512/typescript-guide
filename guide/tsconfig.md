@@ -6,6 +6,16 @@
 下文所有默认值均对照 **TypeScript 5.9**（本页站点编译时使用的版本）。官方完整列表见 [TSConfig Reference](https://www.typescriptlang.org/tsconfig)。
 :::
 
+::: warning 如果你用的是 TypeScript 6 / 7
+**一批默认值改了，一批选项被删了。** 本页里凡是有变化的条目，下方都挂了 🆕 TS7 提示块。完整迁移步骤见 [TypeScript 6 与 7](./typescript-7)。
+
+最要紧的三条，升级前先记住：
+
+- `types` 默认从「自动包含所有 `@types/*`」变成 `[]` —— 升级后 `process`、`describe` 会集体报"找不到名称"
+- `rootDir` 默认从「推断的公共目录」变成 `.` —— 产物会多套一层 `dist/src/`
+- `baseUrl` 被删除、`target: es5` 被删除、`moduleResolution: node10` 被删除
+:::
+
 ## 一、先抄配置：三种常见形态
 
 先给结论。下面三份是可以直接用的基线，**每一行都有注释**，先看这里，再看后面的逐项拆解。
@@ -69,8 +79,9 @@
 
     /* ── 工程结构 ────────────────────────────────── */
     // 路径别名。⚠️ 只影响类型解析，不影响运行时 —— Vite / webpack 里必须再配一遍 alias
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] }
+    // 🆕 TS7：baseUrl 已删除。paths 的值改成相对 tsconfig 所在目录写（加 ./ 前缀），
+    // 这种写法在 TS 5.x 下同样有效，现在就改可以两边通吃。
+    "paths": { "@/*": ["./src/*"] }
   },
   // 参与编译的文件。写了 include 就不再默认包含全部
   "include": ["src", "vite.config.ts"],
@@ -88,6 +99,8 @@
     "target": "ES2023",
     // 关键：Node 环境不要 DOM，用 ES + node 的 @types 提供的全局
     "lib": ["ES2023"],
+    // 🆕 TS7：types 默认是 []，不写就一个 @types 都不加载，process / Buffer 全报"找不到名称"
+    "types": ["node"],
     // 原生 ESM 的 Node 项目用 NodeNext，它会正确解析 package.json 的 exports / imports 字段
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -176,6 +189,14 @@
 - 现代项目写 `ES2020` ~ `ES2023`
 - 有打包器时，让打包器按 browserslist 降级，`target` 直接给高版本
 
+::: details 🆕 TS7 变化
+- **默认值从 `ES5` 变成 `es2025`**，而且是**浮动目标**（随年份推进，明年可能就是 `es2026`）
+- **`target: "es5"` 被删除**（6.0 弃用 → 7.0 硬错误）。最低只能是 `es2015`
+- 顺带地 `downlevelIteration` 也没意义了，一并删除
+
+浮动目标是把双刃剑：好处是新语法默认不降级，坏处是**升级 TS 小版本可能悄悄改变产物语法**。要锁定行为就显式写死 `target`。
+:::
+
 ### `lib`
 
 声明**可用的内置 API 类型**。`target` 管语法，`lib` 管 API，两者独立：
@@ -189,6 +210,12 @@
 - Node 项目忘了装 `@types/node`，`process`、`fs` 全部报红（这是没有 `lib` 可救的，必须装包）
 - 用了 `Object.groupBy` 但 `lib` 是 `ES2022`，报"属性不存在"——那是 **ES2024** 的 API，把 lib 提到 `ES2024` 或单独加 `"ES2024.Object"`
 - 不写 `lib` 时会按 `target` 推断，且**默认包含 DOM**。所以 Node 项目务必显式写 `lib: ["ES2023"]`，否则你的服务端代码里写 `window` 也不报错
+
+::: details 🆕 TS7：`libReplacement` 默认变成 `false`
+`libReplacement` 控制是否用 `@typescript/lib-*` 这个包里的 lib 文件替换内置的 `lib.*.d.ts`（一般只有装了 `@typescript/lib-dom` 这类包的人会用到）。6.0 起默认 `false`，理由是它能避免大量失败的模块解析、提升解析性能。
+
+如果你确实在用 `@typescript/lib-*` 系列包，需要显式写 `"libReplacement": true`，否则你装的 lib 不会生效。
+:::
 
 ### `jsx`
 
@@ -223,6 +250,12 @@ class B extends A {
 
 `target >= ES2015` 就不需要它。现在只有还在打 ES5 产物的库才用得上。
 
+::: danger 🆕 TS7：这个选项被删了
+6.0 起设置即报错，7.0 起**选项本身不存在**。原因是它的唯一用途就是配合 `target: es5`，而 es5 也没了。直接把这一行删掉即可 —— `target >= es2015` 本来就用不上它。
+
+如果你确实要打 ES5 产物（比如 toG 的老浏览器兜底），正确做法是：**`target` 给高版本，让 Babel / esbuild 按 browserslist 下沉**，而不是靠 `tsc` 降级。
+:::
+
 ## 三、模块系统
 
 ### `module` / `moduleResolution`
@@ -238,6 +271,14 @@ class B extends A {
 | `ESNext` | `Node10` | ❌ 错误搭配，导入时经常不认扩展名、不认 `exports` |
 
 规则很简单：**用打包器 → `Bundler`；写 npm 包或原生 ESM Node 服务 → `NodeNext`。** 详见 [ESM / CJS 与模块解析](../engineering/module)。
+
+::: details 🆕 TS7 变化
+- **`module` 默认值变成 `esnext`**（以前是 `CommonJS`，取决于 target）
+- **`module: "amd"` / `"umd"` / `"systemjs"` / `"none"` 全部删除**（6.0 弃用 → 7.0 硬错误），连带 `/// <amd-module>` 指令
+- **`moduleResolution: "node"`（即 `node10`）和 `"classic"` 删除**，只剩 `bundler` / `nodenext`
+
+也就是说上面表格里的第一行（`CommonJS` + `Node10`）在 TS7 下已经不存在了。还在用的项目只能二选一：要么迁到 `NodeNext`（老 CJS 项目要连带改 `require` 写法），要么迁到 `Bundler`（需要打包器兜底）。
+:::
 
 一个高频报错：在 `Bundler` 模式下写 `import x from './foo.ts'` 会报错，需要开 `allowImportingTsExtensions`（且必须配 `noEmit` 或 `emitDeclarationOnly`）。
 
@@ -296,6 +337,12 @@ import express from 'express'
 
 现代项目一律 `true`。注意：**Babel / esbuild 默认行为等价于开着它**，如果你在 tsconfig 里关掉，类型检查和实际运行结果会不一致——这是最阴险的一类 bug。
 
+::: details 🆕 TS7 变化
+**不能再设成 `false`**（6.0 弃用 → 7.0 硬错误），`allowSyntheticDefaultImports` 同理。
+
+其实从 6.0 起它就默认 `true` 了，所以绝大多数项目只要**把这一行删掉**即可。只有显式写着 `"esModuleInterop": false` 的老配置才会报错。
+:::
+
 ### `resolveJsonModule`
 
 允许 `import pkg from './package.json'`。开了之后如果 `include` 里包含 json，会连 json 一起处理。`module: NodeNext` 下还需要 import 断言/属性。
@@ -328,6 +375,17 @@ import express from 'express'
 | `strictBuiltinIteratorReturn` | 内置迭代器的 `TReturn` 是 `undefined` 而非 `any` | 关掉后 `for...of` 的返回值是 `any` |
 
 更多细节见 [strict 家族](./strict)。
+
+::: tip 🆕 TS7：`strict` 默认是 `true`
+从 6.0 起 `strict` 默认开启，7.0 沿用。这一项对现代项目基本是纯收益 —— 新项目本来就该开。
+
+真正的影响是那些**从没开过 strict 的老项目**：升级后你会一次性拿到成百上千个 `strictNullChecks` 报错。两个选择：
+
+1. 老老实实补类型（长期正确，但工作量大）
+2. 先显式写 `"strict": false` 顶住，再按 [strict 家族](./strict) 的顺序逐个打开
+
+另外 `alwaysStrict` 也变成「假定为 true、不能设 false」，表里这一项在 TS7 下不能再关。
+:::
 
 ### `noUncheckedIndexedAccess`
 
@@ -418,6 +476,16 @@ const ok = env['PORT']
 - `outDir`：产物目录
 - `rootDir`：**默认是所有输入文件的最长公共路径**。这意味着只要 `src` 外面混进来一个 `.ts`，`dist` 结构就会多套一层（`dist/src/index.js`）。显式写 `rootDir: "src"` 能锁死结构
 
+::: warning 🆕 TS7：`rootDir` 默认值变成了 `.`
+以前默认是「推断出的公共目录」（通常是 `src`），**6.0 起默认是 `.`（tsconfig 所在目录）**。不显式写的话，产物会从 `dist/index.js` 变成 `dist/src/index.js` —— 部署入口、`package.json` 的 `main`、Dockerfile 的 COPY 路径会**全部同时失效**，而且报错信息不会告诉你原因。
+
+升级后第一件事就是确认这条：
+
+```jsonc
+{ "compilerOptions": { "rootDir": "./src", "outDir": "./dist" } }
+```
+:::
+
 ### `declaration` 家族
 
 | 开关 | 作用 |
@@ -470,6 +538,24 @@ const ok = env['PORT']
 
 默认行为（不写 `types`）会把 `node_modules/@types` 下**所有**包都注入全局。这就是为什么装了个 `@types/xxx` 之后，你的全局作用域莫名其妙多了些东西。写测试工程时经常要显式收窄。
 
+::: warning 🆕 TS7：不写 `types` 时默认变成 `[]`
+这是升级后**最普遍的一类报错来源**。以前 `@types/node`、`@types/jest` 自动进全局，现在一个都不进，你会看到：
+
+```
+error TS2580: Cannot find name 'process'. Do you need to install type definitions for node?
+error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner?
+```
+
+两个解法：
+
+```jsonc
+{ "types": ["*"] }                  // 恢复旧行为，全部加载
+{ "types": ["node", "jest"] }       // 推荐：显式列出，少加载无用全局类型还能提速
+```
+
+注意 `@types/node` 本身还是要装，只是「装了但被自动引入」变成了「装了还得声明」。
+:::
+
 ### `skipLibCheck`
 
 跳过对所有 `.d.ts` 的类型检查。默认 `false`。
@@ -493,6 +579,23 @@ const ok = env['PORT']
   "paths": { "@/*": ["src/*"] }
 }
 ```
+
+::: danger 🆕 TS7：`baseUrl` 被删除
+6.0 弃用、7.0 硬错误，而且**它不再作为模块解析的查找根**。迁移方式只有一步：把 `baseUrl` 删掉，`paths` 的值改成**相对 tsconfig 所在目录**的写法（加 `./` 前缀）：
+
+```jsonc
+{
+  // ❌ TS7 报错：Option 'baseUrl' has been removed
+  // "baseUrl": ".",
+  // "paths": { "@/*": ["src/*"] }
+
+  // ✅ 相对项目根写，TS 5.x / 7.x 都认
+  "paths": { "@/*": ["./src/*"] }
+}
+```
+
+改完记得同步改打包器和运行时的 alias 配置 —— 类型层面能过，不代表运行时能找到。
+:::
 
 ⚠️ **它只影响类型解析，不影响运行时。** 打包器里还要再配一遍，否则能编译通过但运行时报"找不到模块"：
 
@@ -552,6 +655,16 @@ Project References，把大项目拆成多个子项目，各自独立编译 + �
 
 monorepo 里这是提速的主要手段。
 
+::: tip 🆕 TS7：monorepo 多了一层并行
+`tsc -b` 在 TS7 下可以用 `--builders <n>` 控制并行构建的项目数，和 `--checkers` 是**乘法关系**：
+
+```bash
+tsc -b --builders 4 --checkers 4   # 最多 16 个并发检查线程
+```
+
+4 个以上的包 + 多核 CI 机器，这一项是除「换编译器」之外最大的提速来源。详见 [TypeScript 6 与 7](./typescript-7)。
+:::
+
 ## 八、常见报错 → 配置对照
 
 | 报错 | 大概率是这里 |
@@ -566,6 +679,21 @@ monorepo 里这是提速的主要手段。
 | `tsc` 很慢 | 开 `skipLibCheck` + `incremental`；大项目上 `references` |
 | 改了 tsconfig 不生效 | 被 `extends` 的某层覆盖了，跑 `tsc --showConfig` |
 
+**升级 TS 6 / 7 后新增的高频报错：**
+
+| 报错 | 原因与修法 |
+| --- | --- |
+| `Cannot find name 'process'`（升级后突然出现） | `types` 默认变 `[]`，写 `"types": ["node"]` |
+| 产物从 `dist/index.js` 变成 `dist/src/index.js` | `rootDir` 默认变 `.`，显式写 `"rootDir": "./src"` |
+| `Option 'baseUrl' has been removed` | 删掉 `baseUrl`，`paths` 改写成 `"./src/*"` |
+| `Option 'downlevelIteration' has been removed` | 直接删掉这一行 |
+| `Option 'target' must be 'es2015' or higher` | `target: es5` 已删除，最低 `es2015` |
+| `Option 'moduleResolution' must be 'bundler' or 'nodenext'` | `node10` / `classic` 已删除 |
+| `Option 'esModuleInterop' cannot be false` | 删掉这一行，默认已是 true |
+| `error TS2451: Cannot redeclare block-scoped variable`（一堆） | 没开 `moduleDetection: force`，非模块文件泄漏到全局 |
+| `tsc src/index.ts` 报 "cannot be used with a tsconfig" | 目录下有 tsconfig 时不能再传文件路径，加 `--ignoreConfig` |
+| 一堆 `strictNullChecks` 报错 | `strict` 默认变 `true`，要么补类型要么显式 `false` |
+
 ## 九、调试配置本身
 
 ```bash
@@ -575,12 +703,27 @@ tsc --traceResolution         # 打印模块解析的每一步（排查找不到
 tsc --listFiles               # 列出所有参与编译的文件
 tsc --noEmit --noErrorTruncation  # 完整报错，不截断长类型
 tsc --generateTrace out-dir   # 生成性能 trace，找编译慢的原因
+
+# 🆕 TS7 新增
+tsc --noEmit --checkers 8     # 类型检查并发数（默认 4，加大更快更吃内存）
+tsc -b --builders 4           # monorepo：并行构建的项目数
+tsc --noEmit --singleThreaded # 全部单线程，排查并发导致的差异
+tsc foo.ts --ignoreConfig     # 绕过"目录下有 tsconfig 就不能传文件路径"
 ```
 
 `--showConfig` 是最重要的一条。遇到"我明明配了为什么不生效"，先跑它，九成能看出是被哪一层 `extends` 覆盖了。
 
+对比两个版本的编译器行为是否一致时（升级 TS7 后建议做一次）：
+
+```bash
+npx tsc6 --noEmit > ts6.log 2>&1   # JS 版（来自 @typescript/typescript6）
+npx tsc  --noEmit > ts7.log 2>&1   # Go 版
+diff ts6.log ts7.log
+```
+
 ## 下一步
 
+- [TypeScript 6 与 7：编译器换引擎了](./typescript-7) —— 上面所有 🆕 标记的完整背景与迁移清单
 - [基础类型](./basic-types)
 - [收窄与判别联合](./narrowing)
 - [ESM / CJS 与模块解析](../engineering/module)

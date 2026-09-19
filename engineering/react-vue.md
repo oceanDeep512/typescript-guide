@@ -117,6 +117,33 @@ function B(props: Props) {
 
 ## Vue 3
 
+::: warning 🆕 TS7：Vue 项目暂时用不了 7.0 做 SFC 类型检查
+Vue 的 `.vue` 单文件组件类型支持靠 **Volar**，而 Volar 依赖 TypeScript 的**语言服务插件机制**——TS 7.0 不带这个 API（7.1 才补，且是重新设计的）。
+
+所以 2026-09 这个时间点上：
+
+| 环节 | 能不能用 TS 7 |
+| --- | --- |
+| 纯 `.ts` / `.vue` 里的 `<script lang="ts">` 之外的项目文件，`tsc --noEmit` | ✅ 可以，快 10 倍 |
+| `.vue` 文件内部的模板类型检查（`vue-tsc`） | ❌ 只能继续用 6.0 |
+| 编辑器里 `.vue` 的智能提示 | ❌ 只能继续用 6.0 |
+
+推荐做法：**两条 typecheck 并存**——
+
+```jsonc
+{
+  "scripts": {
+    "typecheck": "tsc --noEmit",         // TS 7，跑得快，覆盖 .ts
+    "typecheck:vue": "vue-tsc --noEmit"  // TS 6 实例，覆盖 .vue
+  }
+}
+```
+
+React 不受影响：`.tsx` 是原生 TS 语法，`tsc` 直接处理，也不需要语言服务插件，可以完全用 7.0。
+
+详见 [TypeScript 6 与 7](../guide/typescript-7)。同样的结论适用于 **Svelte / Astro / MDX**。
+:::
+
 ### 组合式 API 的类型推导
 
 ```ts
@@ -223,4 +250,5 @@ declare module 'some-ui' {
 
 ## 下一步
 
+- [TypeScript 6 与 7](../guide/typescript-7)
 - [Node 与服务端类型](./node)

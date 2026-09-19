@@ -35,6 +35,12 @@ tsc --noEmit
 
 Vite / webpack / Next.js 内部用的是 esbuild 或 swc 做转译，**它们不会替你检查类型**。如果构建脚本里没有 `tsc --noEmit`，你的 CI 等于完全没有类型保障。
 
+::: tip 🆕 TS7：这张表没变，但 `tsc` 换了个实现
+从 TS 7.0（2026-07-08）起，官方 `tsc` 是 **Go 写的原生编译器**，同一份代码的全量检查快 8～12 倍。分工没变——**类型检查仍然只有 `tsc` 能做**，esbuild / swc / Babel 依然一行都不检查。
+
+需要注意的只有一点：**TS 7.0 不带程序化 API**，所以 `vue-tsc` 这类包装器、以及调 TS API 生成 `.d.ts` 的工具暂时还要用 6.0 的实例。详见 [TypeScript 6 与 7](./typescript-7)。
+:::
+
 ## 类型擦除
 
 TS 的类型在编译后 100% 消失，运行时不存在。
@@ -107,6 +113,18 @@ function greet(u) {
 
 `.d.ts` 里只有类型，没有实现。它是"这个包长什么样"的契约，也是 IDE 补全的来源。详见[发布带类型的包](../engineering/publish)。
 
+::: warning 🆕 TS7：生成 `.d.ts` 这条路在 7.0 下要绕一下
+`.d.ts` 生成是目前**唯一必须依赖完整类型检查程序**的环节，而 TS 7.0 **不提供程序化 API**。所以 `tsup` / `rollup-plugin-dts` / `api-extractor` 这类"调 TS API 出声明"的工具，在 `typescript@7` 下拿不到能用的 `createProgram`。
+
+三个解法，按推荐度：
+
+1. **给 dts 工具喂 6.0**：装 `@typescript/typescript6` 并用 npm alias 指过去，`tsc` 仍用 7.0
+2. **用非 TS 实现的 dts 生成器**：`tsdown`（Oxc）等，不经过 TS API
+3. **开 `isolatedDeclarations`**：让声明能单文件推导，从根上不再需要完整 program
+
+见 [工具链篇](../engineering/toolchain) 与 [TypeScript 6 与 7](./typescript-7)。
+:::
+
 ## skipLibCheck 为什么大家都开
 
 ```jsonc
@@ -134,12 +152,16 @@ tsc --noEmit --explainFiles
 
 # 列出最终生效的所有编译选项
 tsc --showConfig
+
+# 🆕 TS7：调类型检查并发度（默认 4）
+tsc --noEmit --checkers 8
 ```
 
 `--noErrorTruncation` 请记牢。类型复杂之后，报错信息会被 TS 折叠成 `Type 'X' is not assignable to type 'DeepPartial<...>'`，不开这个开关你根本看不到问题在哪。
 
 ## 下一步
 
+- [TypeScript 6 与 7：编译器换引擎了](./typescript-7)
 - [tsconfig 逐项精讲](./tsconfig) —— 每个开关到底在做什么
 - [工具链分工](../engineering/toolchain) —— tsc / esbuild / tsx / tsup / vite 各自管哪一段
 - [基础类型](./basic-types) —— 进入语言本身

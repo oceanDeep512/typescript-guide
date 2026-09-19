@@ -23,6 +23,7 @@ function twoslashQueryDefaultHidden() {
 
 const guide = [
   { text: '写在前面', link: '/guide/' },
+  { text: 'TypeScript 6 与 7：换引擎了', link: '/guide/typescript-7' },
   { text: '编译流程：tsc 还是 Babel', link: '/guide/compile' },
   { text: 'tsconfig 逐项精讲', link: '/guide/tsconfig' },
   { text: '基础类型', link: '/guide/basic-types' },
@@ -178,7 +179,7 @@ export default defineConfig({
 
     footer: {
       message: '基于 VitePress 与 Twoslash 构建',
-      copyright: '内容以 TypeScript 5.x 为准',
+      copyright: '类型系统以 TS 5.9 为准，另含 TS 6 / 7 迁移说明',
     },
 
     // 每篇文档底部的「在 GitHub 上编辑此页」，直接落到真实仓库对应文件

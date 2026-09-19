@@ -64,10 +64,15 @@ type MaybeUser = Nullable<User>
 
 1. **[编译流程](./compile)** —— 先搞清 tsc / Babel / swc 谁负责什么，否则工程配置会一直靠猜
 2. **[tsconfig 逐项精讲](./tsconfig)** —— 每个开关在做什么、默认值有什么坑
-3. **[收窄与判别联合](./narrowing)** —— 日常收益最高的单一技巧
-4. **[条件类型与分发](../generics/conditional)** —— 类型编程的门槛
-5. **[六大套路](../type-programming/six-patterns)** —— 类型编程的总纲
-6. **[调试与类型测试](../type-programming/debugging)** —— 卡住时的救命工具
+3. **[TypeScript 6 与 7](./typescript-7)** —— 编译器换成 Go 了：默认值改了什么、什么被删了、你的技术栈能不能升
+4. **[收窄与判别联合](./narrowing)** —— 日常收益最高的单一技巧
+5. **[条件类型与分发](../generics/conditional)** —— 类型编程的门槛
+6. **[六大套路](../type-programming/six-patterns)** —— 类型编程的总纲
+7. **[调试与类型测试](../type-programming/debugging)** —— 卡住时的救命工具
+
+::: tip 版本说明
+本站的类型系统内容以 **TypeScript 5.9** 为准（Twoslash 实时编译用的就是它）。**TS 6 / 7 没有改变类型系统本身**——语法和语义都还在，变的是编译器引擎、默认值、和被删掉的老选项。相关内容集中在 [TypeScript 6 与 7](./typescript-7)，并在 [tsconfig 篇](./tsconfig)里以 🆕 TS7 标记逐项标注。
+:::
 
 ## Twoslash 怎么用
 

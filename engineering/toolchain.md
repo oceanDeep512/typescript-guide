@@ -99,11 +99,23 @@ TypeScript 自带的编译器，同时做两件事：**类型检查** + **转译
 tsc --noEmit     # 只检查，不产出任何文件（CI 里跑这个）
 tsc              # 检查 + 产出 .js
 tsc -b           # build 模式，配合 project references 做增量构建
+
+# 🆕 TS7 新增的并发开关
+tsc --noEmit --checkers 8   # 类型检查线程数（默认 4）
+tsc -b --builders 4         # 并行构建的项目数（monorepo）
 ```
 
 **它不打包。** 这是最常被误解的一点：`tsc` 只是把 `src/a.ts` 变成 `dist/a.js`，一进一出。它不会把 `node_modules` 里的依赖合并进来，不做 tree-shaking，不做代码分割。想发布一个单文件的库，`tsc` 做不到。
 
 慢，是因为它要做完整的类型推导——这份慢换来的是唯一可信的类型检查。
+
+::: tip 🆕 TS7：`tsc` 已经不是那个慢的 `tsc` 了
+从 7.0（2026-07-08）起，官方 `tsc` 是 **Go 写的原生编译器**，同样的大仓库全量检查快 **8～12 倍**，内存降 6～26%。上面"慢"这句话的严重程度要打个对折。
+
+但有一条**重要限制**：**TS 7.0 不提供程序化 API**（7.1 才补）。所以本页后面所有"内部调用 TypeScript API"的工具（生成 `.d.ts` 的那些），在 TS 7 下都跑不起来 —— 需要按 [共存方案](../guide/typescript-7) 让它们用 6.0 的实例。
+
+不受影响的是：esbuild / swc / oxc / tsx / vite / tsup / tsdown 的**转译与打包**部分 —— 它们本来就不 `import 'typescript'`。
+:::
 
 ### `esbuild` —— 快的转译器 + 打包器
 
@@ -352,6 +364,24 @@ npx unbuild --stub
 **5. "d.ts 是 esbuild 生成的"**
 不是。类型声明至今仍然依赖 TypeScript 自己的 API：`tsup` 内部调 `tsc` / `rollup-plugin-dts`，`tsdown` 用 Oxc。所以开了 `dts` 之后构建变慢是必然的。
 
+::: warning 🆕 TS7：这一条现在有个大坑
+TS 7.0 **不带 API**，所以任何"调用 TypeScript API 生成 `.d.ts`"的工具链在 `typescript@7` 下会直接炸（`Cannot find module 'typescript'` 的变体，或者拿到了一个没有 `createProgram` 的模块）。
+
+2026-09 这个时间点上的现实选择：
+
+| 方案 | 做法 | 评价 |
+| --- | --- | --- |
+| 让 dts 工具用 6.0 | 装 `@typescript/typescript6`，把它 alias 成 `typescript` 给工具用，`tsc` 用 7.0 | **当前最实用**，速度收益照样拿到 |
+| 用不依赖 TS API 的 dts 生成器 | `tsdown`（Oxc）/ `rolldown-plugin-dts` 等非 TS 实现 | 长期方向，但覆盖率还在追 |
+| 开 `isolatedDeclarations` | 让声明可以**单文件推导**，不必跑完整 program | 最彻底，代价是导出的东西必须显式标注类型 |
+
+第三条值得单独说：`isolatedDeclarations` 的设计目标和 TS 7 的并行化是同一件事——**让每个文件能独立处理**。开了它，`.d.ts` 生成这件事就能脱离完整的类型检查程序，也就脱离了对 TS API 的依赖。如果你的库还没开，现在是考虑的好时机。
+
+```jsonc
+{ "compilerOptions": { "declaration": true, "isolatedDeclarations": true } }
+```
+:::
+
 **6. "Node 能跑 .ts，那 tsconfig 的 paths 也能用"**
 不能。Node 的类型剥离**完全不读 `tsconfig.json`**。需要 `paths` 别名就回到 `tsx` 或打包器。
 
@@ -367,8 +397,13 @@ npx unbuild --stub
 | `useDefineForClassFields` | `tsc` / `esbuild` / `swc` 都要对齐 | 不一致会出现"本地好、线上炸" |
 | `paths` | `tsc` 只影响类型 | 运行时要打包器或 `tsx` 支持；Node 原生不支持 |
 | `experimentalDecorators` + `emitDecoratorMetadata` | 只有 `tsc` / `ts-node` | NestJS 这类框架锁死在 `tsc` 上 |
+| 🆕 `--checkers` / `--builders` | 只有 TS 7 的 `tsc` | 其他工具无视，它们是 tsc 命令行专有 |
 
 一句话总结：**`tsconfig.json` 是给 `tsc` 和 IDE 看的**，其他工具只读其中一小部分（主要是模块解析和少量语法开关）。
+
+::: warning 🆕 TS7：`baseUrl` 没了，会影响 `paths`
+7.0 删除了 `baseUrl`。`paths` 的值必须改成**相对 tsconfig 所在目录**的写法（`"@/*": ["./src/*"]`）。改完记得打包器和 `tsx` 的 alias 也要同步 —— 见 [tsconfig 逐项精讲](../guide/tsconfig)。
+:::
 
 ## 七、三套可以照抄的组合
 
@@ -378,12 +413,22 @@ npx unbuild --stub
 {
   "scripts": {
     "dev": "vite",
-    "typecheck": "tsc --noEmit",           // 或 vue-tsc --noEmit
+    // 🆕 TS7：CI 机器上可以按核数调并发
+    "typecheck": "tsc --noEmit --checkers 8", // 或 vue-tsc --noEmit
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   }
 }
 ```
+
+::: warning 🆕 TS7：`vue-tsc` 之类的包装器暂时用不了 7.0
+`vue-tsc` / `svelte-check` / `astro check` 底层是 Volar 或 TypeScript 的语言服务 API，而 **TS 7.0 不带 API**。所以：
+
+- `typecheck` 用原生 `tsc --noEmit`（Go 版，快 10 倍）✅
+- `vue-tsc --noEmit`（要检查 `.vue` 里的类型）→ 只能继续用 6.0 实例
+
+Vue 项目当前推荐「两条 typecheck」：纯 `.ts` 部分用 7.0 快速检查，SFC 部分用 6.0 的 `vue-tsc`。详见 [TypeScript 6 与 7](../guide/typescript-7)。
+:::
 
 **Node 后端服务**
 
@@ -392,6 +437,7 @@ npx unbuild --stub
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
+    // 🆕 TS7：rootDir 默认值变了，升级后务必确认 dist 结构没多套一层
     "build": "tsc",                         // 产出 dist/
     "start": "node dist/index.js"           // 生产跑编译后的 JS
   }
@@ -415,6 +461,7 @@ npx unbuild --stub
 
 ## 下一步
 
+- [TypeScript 6 与 7：编译器换引擎了](../guide/typescript-7)
 - [ESM / CJS 与模块解析](./module)
 - [发布带类型的包](./publish)
 - [tsconfig 逐项精讲](../guide/tsconfig)
