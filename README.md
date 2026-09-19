@@ -42,13 +42,26 @@ npm run preview  # 预览构建产物
         ├── TypeCard.vue       # 速查卡片
         └── Callout.vue        # 提示块
 
-guide/             基础篇：编译流程、tsconfig、基础类型、收窄、strict
-type-system/       类型系统：结构化类型、兼容性、变型、联合交叉、断言、声明文件
-generics/          泛型与进阶：keyof、映射类型、条件类型、infer、模板字面量、工具类型源码
-type-programming/  类型编程：心智模型、六大套路、递归、边界行为、调试、性能
-engineering/       工程实践：React/Vue、Node、异步迭代器、流式 SSE、模块、发包
+目录顺序即推荐阅读顺序（与侧边栏一致，详见 `guide/index.md` 的「阅读路线」）：
+
+```
+guide/             基础篇（按阅读顺序）
+                   写在前面 → 编译流程 → tsconfig → TypeScript 6/7
+                   → 基础类型 → 收窄与判别联合 → strict 家族
+type-system/       类型系统：结构化类型 → 兼容性 → 变型 → 联合与交叉
+                   → 断言守卫 satisfies → 声明文件与模块解析
+generics/          泛型：泛型基础 → keyof/typeof → 映射类型 → 条件类型与分发
+                   → infer → 模板字面量 → 内置工具类型源码
+type-programming/  类型编程：心智模型 → 六大套路 → 调试与类型测试
+                   → 递归与元组计数 → any/unknown/never → 编译性能
+engineering/       工程实践：概览 → 工具链 → React/Vue → 装饰器与 NestJS
+                   → Node → Schema 与运行时校验 → 异步与迭代器 → 流式 SSE
+                   → ESM/CJS 与模块解析 → 发布带类型的包
 cheatsheet/        速查表：关键字、工具类型、套路、边界、异步、变型与调试
 practice/          题库：热身与 Easy、Medium 精选（折叠式答案）
+```
+
+后两篇（速查表、题库）是按需查阅性质，不参与阅读顺序。
 ```
 
 ## 技术栈
