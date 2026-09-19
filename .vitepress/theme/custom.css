@@ -209,15 +209,40 @@
 .vp-doc .custom-block p { line-height: 1.7; }
 
 /* ---------- Twoslash ---------- */
-/* 可悬浮标识符：恢复库默认行为 —— 下划线平时 transparent，鼠标移到代码块上才显色。
-   这样代码区保持干净，不抢正文的视觉重心。
-   触屏没有 hover，默认行为等于「完全没有可点提示」，所以只在 (hover: none) 设备上
-   让下划线常驻，颜色直接用库自己 hover 用的 --twoslash-underline-color（低饱和灰）。 */
-@media (hover: none) {
-  .twoslash .twoslash-hover {
-    border-bottom-color: var(--twoslash-underline-color);
-  }
+/* 可悬浮标识符：下划线常驻显示，但刻意做得「安静」——
+   平时是一条 30% 透明度的中性点线；鼠标真正落在某个标识符上时才提亮成主题金色。
+   库默认行为是「鼠标进入代码块 → 整块所有虚线一起显色」，这里用 :not(:hover)
+   把整块联动压掉（特异性更高），只让当前那一个高亮，避免满屏虚线抢正文的视觉重心。 */
+.twoslash {
+  --twoslash-underline-rest: rgba(28, 25, 23, 0.3);
+  --twoslash-underline-active: #a16207;
 }
+.dark .twoslash {
+  --twoslash-underline-rest: rgba(245, 245, 244, 0.32);
+  --twoslash-underline-active: #f59e0b;
+}
+.twoslash .twoslash-hover {
+  border-bottom: 1px dotted var(--twoslash-underline-rest);
+}
+.twoslash .twoslash-hover:not(:hover) {
+  border-bottom-color: var(--twoslash-underline-rest);
+}
+.twoslash .twoslash-hover:hover {
+  border-bottom-color: var(--twoslash-underline-active);
+}
+
+/* 弹窗里的类型代码要有配色。
+   VitePress 的上色规则是 .dark .vp-code span { color: var(--shiki-dark) }，只认代码块内部的
+   .vp-code；而 twoslash 弹窗是 FloatingVue 动态创建的 <div class="shiki twoslash-floating">，
+   没有 vp-code 类，于是 token 上挂的 --shiki-light / --shiki-dark 始终没被读出来，
+   整段退化成一个颜色。这里手动把变量接回去（非 token 的 span 走 inherit 兜底，不受影响）。 */
+.twoslash-floating span {
+  color: var(--shiki-light, inherit);
+}
+.dark .twoslash-floating span {
+  color: var(--shiki-dark, var(--shiki-light, inherit));
+}
+
 .twoslash .twoslash-popup-container {
   font-family: var(--vp-font-family-mono);
   font-size: 12.5px;
