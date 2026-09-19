@@ -2,6 +2,16 @@
 
 这三个是"从已有类型里取东西"的工具，也是类型编程里出现频率最高的语法。
 
+一句话记住三者分工：
+
+| 工具 | 作用 | 值层类比 |
+| --- | --- | --- |
+| `keyof T` | 取**键** → 键名联合 | `Object.keys(obj)` |
+| `typeof v` | 取**值**的类型 | 把运行时的值搬进类型层 |
+| `T[K]` | 按**键**取值类型 | `obj[key]` |
+
+它们几乎从不单独出现：`keyof typeof config`、`T[keyof T]`、`T[K & string]` 才是你在库源码里真正会看到的形态。
+
 ## keyof：取键
 
 ```ts twoslash
@@ -156,6 +166,35 @@ type A = Opt['a']
 
 配合 `noUncheckedIndexedAccess` 时，索引签名访问也会带 `undefined`。
 
+### 深层取值与批量取值
+
+```ts twoslash
+interface Nested {
+  user: { name: string; age: number }
+  meta: { tags: string[] }
+}
+
+// ① 深层：一层一层往下点
+type Name = Nested['user']['name']
+//   ^?
+
+// ② 批量：K 是联合 → 结果是值的联合
+type Values = Nested[keyof Nested]
+//   ^?
+
+// 社区给它起了个名字：ValueOf
+type ValueOf<T> = T[keyof T]
+type V = ValueOf<{ a: 1; b: 'x' }>
+//   ^?
+
+// ③ 取值后去掉可选 / null
+type Opt = { a?: string; b: number | null }
+type A = NonNullable<Opt['a']>
+//   ^?
+```
+
+`ValueOf` 在库源码里出现频率极高——**"我不关心键是什么，我只要这个对象所有值的类型"**时就用它，比如表单字段值的联合、枚举所有 payload 类型。
+
 ## 三者组合的实战
 
 ### 从常量对象生成联合类型
@@ -182,6 +221,41 @@ const STATUSES = ['idle', 'loading', 'done'] as const
 type Status = (typeof STATUSES)[number]
 //   ^?
 ```
+
+### SDK 事件表：三件套的标准用法
+
+这是 `keyof` + 索引访问 + 泛型约束**同时在场**的最典型场景，几乎所有带事件/回调的 SDK 都这么写：
+
+```ts twoslash
+// 一份"事件名 → 载荷"的表（SDK 里通常是导出的 interface）
+interface Events {
+  'user.created': { id: string; name: string }
+  'user.deleted': { id: string }
+  'order.paid': { orderId: string; amount: number }
+}
+
+// ① keyof：事件名联合，自动跟着表走，加一个事件就多一个成员
+type EventName = keyof Events
+//   ^?
+
+// ② 索引访问：取某个事件的载荷
+type Created = Events['user.created']
+//   ^?
+
+// ③ 所有载荷的联合 —— 写 reducer / 消息总线时的入参类型
+type AnyPayload = Events[keyof Events]
+//   ^?
+
+// ④ 泛型约束：让 name 和 payload 对得上（错配会直接报错）
+declare function emit<K extends EventName>(name: K, payload: Events[K]): void
+
+emit('user.created', { id: '1', name: 'x' })
+emit('user.deleted', { id: '1' })
+// emit('user.deleted', { id: '1', name: 'x' }) // ❌ 多余字段
+```
+
+`emit` 的签名就是"类型安全的事件系统"的全部秘密：**第一个参数约束第二个参数的类型**。
+事件名写错、载荷字段多/少/错，都在编译期拦住。
 
 ### 类型安全的 get
 
@@ -254,3 +328,4 @@ type A = { x: 1 }
 ## 下一步
 
 - [映射类型](./mapped)
+- [组合拳：六个概念一起工作](./in-action)

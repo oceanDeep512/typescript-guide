@@ -52,7 +52,7 @@ guide/             基础篇（按阅读顺序）
 type-system/       类型系统：结构化类型 → 兼容性 → 变型 → 联合与交叉
                    → 断言守卫 satisfies → 声明文件与模块解析
 generics/          泛型：泛型基础 → keyof/typeof → 映射类型 → 条件类型与分发
-                   → infer → 模板字面量 → 内置工具类型源码
+                   → infer → 模板字面量 → 内置工具类型源码 → 组合拳
 type-programming/  类型编程：心智模型 → 六大套路 → 调试与类型测试
                    → 递归与元组计数 → any/unknown/never → 编译性能
 engineering/       工程实践：概览 → 工具链 → React/Vue → 装饰器与 NestJS

@@ -59,6 +59,8 @@ const generics = [
   { text: 'infer 模式匹配', link: '/generics/infer' },
   { text: '模板字面量类型', link: '/generics/template-literal' },
   { text: '内置工具类型源码', link: '/generics/utility' },
+  // 收束篇：把前面六个语法串起来，兼作"读别人类型"的速查手册
+  { text: '组合拳：六个概念一起工作', link: '/generics/in-action' },
 ]
 
 // 「调试」排在「六大套路」之后：刚学完套路立刻要会自己排错，之后再进递归和边界。

@@ -67,6 +67,45 @@ type B = Unwrap<Promise<Promise<number>>>
 
 注意嵌套 Promise 只解一层，要递归解用官方的 `Awaited`。
 
+### 内置工具就是这么造的
+
+`Awaited` 的秘密只是**递归调用自己**：
+
+```ts twoslash
+type MyAwaited<T> = T extends Promise<infer U> ? MyAwaited<U> : T
+
+type A = MyAwaited<Promise<Promise<number>>>
+//   ^?
+```
+
+另外两个高频工具同理，都是"一次 `infer`"：
+
+```ts twoslash
+interface User {
+  id: string
+}
+
+type MyParameters<T extends (...args: any) => any> = T extends (
+  ...args: infer P
+) => any
+  ? P
+  : never
+
+type MyReturnType<T extends (...args: any) => any> = T extends (
+  ...args: any
+) => infer R
+  ? R
+  : never
+
+type P = MyParameters<(id: string, opt?: { force: boolean }) => void>
+//   ^?
+type R = MyReturnType<(id: string) => Promise<User>>
+//   ^?
+```
+
+看出规律了吗：**`infer` 放在哪个位置，就提取哪个位置的类型**——
+参数列表里就是参数元组，返回值位置就是返回类型，`Promise<...>` 里就是 resolve 出来的值。
+
 ### 字符串
 
 ```ts twoslash
@@ -200,3 +239,4 @@ type ElemOf<T> = T extends AsyncIterable<infer U> ? U : never
 ## 下一步
 
 - [模板字面量类型](./template-literal)
+- [组合拳：六个概念一起工作](./in-action)

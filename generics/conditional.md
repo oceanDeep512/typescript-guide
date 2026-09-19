@@ -138,6 +138,44 @@ type A = Flatten<string[][]>
 //   ^?
 ```
 
+## 内置工具类型就是这么造的
+
+`Exclude` / `Extract` / `NonNullable` 三个工具类型，**全部只有一行条件类型**：
+
+```ts twoslash
+// 从 T 里去掉 U
+type MyExclude<T, U> = T extends U ? never : T
+
+// 从 T 里只保留 U
+type MyExtract<T, U> = T extends U ? T : never
+
+// 去掉 null / undefined（这是 4.8 之前的官方实现，最能说明分发；
+// 现在官方改成了 `T & {}`，原因见[内置工具类型源码](./utility)）
+type MyNonNullable<T> = T extends null | undefined ? never : T
+
+type A = MyExclude<'a' | 'b' | 'c', 'a'>
+//   ^?
+type B = MyExtract<'a' | 'b' | 1, string>
+//   ^?
+type C = MyNonNullable<string | null | undefined>
+//   ^?
+```
+
+能工作的关键就是上一节的**分发**：`T` 是裸类型参数，所以 `'a' | 'b' | 'c'` 会被拆成
+`'a' extends 'a'`、`'b' extends 'a'`、`'c' extends 'a'` 三个判断，各自得到 `never` / `'b'` / `'c'`，再合并。
+
+**去掉分发会怎样**——把 `T` 包一层元组，整个联合一次性判断：
+
+```ts twoslash
+type NotDistributive<T, U> = [T] extends [U] ? never : T
+
+type X = NotDistributive<'a' | 'b', 'a'>
+//   ^?
+```
+
+`['a' | 'b'] extends ['a']` 整体为假，所以结果是整个 `'a' | 'b'` 原样返回——**这不是我们想要的**。
+写工具类型时"要不要分发"是第一决策，`Extract` / `Exclude` 必须分发。
+
 ## 实用模式
 
 ### 1. 条件返回类型
@@ -178,3 +216,4 @@ const y: Props = { b: 2 }
 ## 下一步
 
 - [infer 模式匹配](./infer)
+- [组合拳：六个概念一起工作](./in-action)

@@ -327,4 +327,5 @@ type R = UnionToIntersection<{ a: 1 } | { b: 2 }>
 
 ## 下一步
 
+- [组合拳：六个概念怎么一起工作](./in-action) —— 把 keyof / 映射 / 条件 / infer / 模板字面量串起来读
 - [类型层心智模型](../type-programming/)

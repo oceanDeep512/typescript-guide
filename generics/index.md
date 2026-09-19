@@ -55,6 +55,67 @@ interface B extends A {
 }
 ```
 
+### 约束的四种常见写法
+
+```ts twoslash
+interface HasId {
+  id: string
+}
+
+// ① 约束成某个形状（"我只需要它有 id"）
+type F1<T extends HasId> = T['id']
+
+// ② 约束来自另一个参数（最有用，也最常见）
+type F2<T, K extends keyof T> = T[K]
+
+// ③ 约束成字面量联合（配合模板字面量做字符串变换）
+type F3<T extends 'a' | 'b'> = `x_${T}`
+type A3 = F3<'a'>
+//   ^?
+
+// ④ 多重约束
+type F4<T extends object & { length: number }> = T
+```
+
+### 为什么约束不能省
+
+去掉约束，TS 立刻不知道你在干什么：
+
+```ts twoslash
+// @errors: 2536
+type Bad<T, K> = T[K]
+```
+
+`T[K]` 的前提是"K 一定是 T 的键"。没有 `K extends keyof T`，TS 无从验证，只能报错。
+**约束的本质是给编译器一个承诺**：我保证 K 只会是 T 的键，你放心让我索引。
+
+## 经典形态：类型安全的事件订阅器
+
+`keyof` + 索引访问 + 泛型约束三者一起用，是 SDK / 事件系统里最常见的签名：
+
+```ts twoslash
+interface Events {
+  click: { x: number; y: number }
+  change: { value: string }
+}
+
+declare function on<K extends keyof Events>(
+  event: K,
+  handler: (payload: Events[K]) => void
+): void
+
+on('click', (p) => {
+  p.x // ✅ 回调参数自动是 { x, y }
+})
+on('change', (p) => {
+  p.value // ✅ 自动是 { value }
+})
+// on('clik', () => {})     // ❌ 事件名拼错
+```
+
+注意这里**没有写任何类型标注**：`p` 的类型是 `Events[K]`，而 `K` 由第一个实参推导出来。
+用户写对了事件名，回调参数的类型就自动对——这是泛型"让类型之间产生关联"最直观的例子。
+
 ## 默认值
 
 ```ts twoslash
@@ -224,3 +285,4 @@ const b = f2(['x', 'y'], 'z')
 ## 下一步
 
 - [keyof / typeof / 索引访问](./keyof-indexed)
+- [组合拳：六个概念一起工作](./in-action)

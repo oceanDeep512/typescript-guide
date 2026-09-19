@@ -148,6 +148,45 @@ type T = typeof id
 
 函数返回值也可以声明成模板字面量类型。
 
+### 6. SDK 里的模式匹配：`${string}.delta` 这类写法
+
+流式 / 事件类 SDK（OpenAI、Anthropic、各类 stream 接口）的事件名几乎都带命名空间，
+模板字面量可以**按模式匹配**它们，而不是逐个枚举：
+
+```ts twoslash
+// 反解出前缀：一切以 .delta 结尾的事件名
+type DeltaOf<T extends string> = T extends `${infer P}.delta` ? P : never
+
+type A = DeltaOf<'response.output_text.delta'>
+//   ^?
+// 不匹配的返回 never
+type B = DeltaOf<'response.done'>
+//   ^?
+```
+
+`${infer P}.delta` 读作"以 `.delta` 结尾，前面那截存进 `P`"。
+反过来 `${infer P}.${string}` 则是"取第一段"。
+
+配合 `Extract` 还能直接从事件联合里筛出一族：
+
+```ts twoslash
+type StreamEvent =
+  | { type: 'response.created'; id: string }
+  | { type: 'response.output_text.delta'; delta: string }
+  | { type: 'response.reasoning.delta'; delta: string }
+  | { type: 'response.completed'; text: string }
+
+// 所有 delta 类事件 —— 不用手写每个名字
+type DeltaEvents = Extract<StreamEvent, { type: `${string}.delta` }>
+//   ^?
+
+declare function onDelta(e: DeltaEvents): void
+onDelta({ type: 'response.output_text.delta', delta: 'hi' })
+// onDelta({ type: 'response.completed', text: 'hi' }) // ❌ 不是 delta 事件
+```
+
+这是"**按模式收窄**"：SDK 新增一个 `xxx.delta` 事件时，你的处理函数签名自动跟上，不用改代码。
+
 ## 限制
 
 ### 1. 联合展开会爆炸
@@ -185,3 +224,4 @@ symbol 要先过滤掉（`Extract<keyof T, string>`）。
 ## 下一步
 
 - [内置工具类型源码](./utility)
+- [组合拳：六个概念一起工作](./in-action)

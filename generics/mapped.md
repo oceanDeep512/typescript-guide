@@ -126,6 +126,37 @@ type R = DeepReadonly<Nested>
 
 三个判断的顺序很重要：**先排除数组，再排除函数，最后才是普通对象**。因为函数和数组都是 `object` 的子类型。
 
+## 实战：一份 interface 派生一整族类型
+
+映射类型在业务代码里最大的价值不是"造工具类型"，而是**一份数据结构派生出所有配套类型**，改一处全部跟着变：
+
+```ts twoslash
+interface User {
+  id: string
+  name: string
+  age: number
+}
+
+// ① 表单校验规则：每个字段一个校验函数
+type Rules<T> = { [K in keyof T]?: (value: T[K]) => string | undefined }
+type UserRules = Rules<User>
+//   ^?
+
+// ② 字段级异步状态（表格 / 详情页常见）
+type Async<T> = { [K in keyof T]: { loading: boolean; data: T[K] | null } }
+type UserAsync = Async<User>
+//   ^?
+
+// ③ 字段权限矩阵：每个字段能不能编辑
+type Editable<T> = { [K in keyof T]: boolean }
+type UserEditable = Editable<User>
+//   ^?
+```
+
+注意 `[K in keyof T]` 里 `in` 后面必须是**键的联合**。
+写 `[K in T]` 是非法的——`T` 是个对象类型，不是联合；必须先 `keyof`。
+这也是为什么映射类型几乎总跟 `keyof` 成对出现。
+
 ## 常见工具的实现
 
 ```ts twoslash
@@ -179,3 +210,4 @@ type P = Prettify<{ a: string } & { b: number }>
 ## 下一步
 
 - [条件类型与分发](./conditional)
+- [组合拳：六个概念一起工作](./in-action)
