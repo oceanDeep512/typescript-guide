@@ -60,7 +60,7 @@ function isUser(x: unknown): x is User {
 
 生态里 zod 是事实标准，先拿它讲。
 
-```ts
+```ts twoslash
 import { z } from 'zod'
 
 // ① 声明一份 schema（它是个值，不是类型）
@@ -72,25 +72,32 @@ const UserSchema = z.object({
 
 // ② 从 schema 反推出 TS 类型（不是手写！）
 type User = z.infer<typeof UserSchema>
-//   → { name: string; age: number; email: string }
+//   ^?
 
 // ③ 在边界处校验
+declare const input: string
 const user = UserSchema.parse(JSON.parse(input))
-//    → User，通过校验后类型可信，且运行时也真的检查过了
 ```
+
+把鼠标悬停在 `UserSchema` 上（或看 `^?` 的结果），可以看到 `z.infer` 推出的就是 `{ name: string; age: number; email: string }` —— **和手写的 interface 一模一样，但它永远跟着 schema 走**。
 
 ### parse 还是 safeParse
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+
+const UserSchema = z.object({ name: z.string() })
+declare const rawInput: string
+
 // parse：失败直接抛 ZodError。适合"失败了就该崩"的场景
-const user = UserSchema.parse(data)
+const user = UserSchema.parse(JSON.parse(rawInput))
 
 // safeParse：返回结果对象，不抛异常。适合表单、API 错误响应
-const result = UserSchema.safeParse(data)
+const result = UserSchema.safeParse(JSON.parse(rawInput))
 if (!result.success) {
-  console.log(result.error.issues)  // [{ path: ['age'], message: '...' }, ...]
+  console.log(result.error.issues) // [{ path: ['name'], message: '...' }, ...]
 } else {
-  result.data  // 已校验的类型安全数据
+  result.data // 已校验的类型安全数据
 }
 ```
 
@@ -117,7 +124,9 @@ const Age = z.string().pipe(z.coerce.number().int().positive())
 
 ### 从已有 schema 派生
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+
 const UserSchema = z.object({ id: z.string(), name: z.string(), age: z.number() })
 
 // 类型随 schema 自动更新，不用写第二遍
@@ -129,11 +138,13 @@ const UserSummarySchema = UserSchema.pick({ id: true, name: true })
 ::: warning zod 4 的写法变化
 zod 4 把字符串格式校验提到了顶层（v3 的链式写法仍可用但已 deprecated）：
 
-```ts
-z.email()          // 替代 z.string().email()
-z.uuid()           // 替代 z.string().uuid()
-z.url()            // 替代 z.string().url()
-z.iso.datetime()   // 替代 z.string().datetime()
+```ts twoslash
+import { z } from 'zod'
+
+z.email()        // 替代 z.string().email()
+z.uuid()         // 替代 z.string().uuid()
+z.url()          // 替代 z.string().url()
+z.iso.datetime() // 替代 z.string().datetime()
 ```
 
 包名还是 `zod`（v4 直接由包根导出）。需要旧行为可以用 `zod/v3` 子路径，需要极小体积用 `zod/mini`。
@@ -151,7 +162,9 @@ z.iso.datetime()   // 替代 z.string().datetime()
 
 没有 `transform` 和 `default` 时，三者完全相同。一旦有，就会分叉：
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+
 const Schema = z.object({
   // 有默认值：输入可以不给，输出一定有
   role: z.string().default('user'),
@@ -159,11 +172,11 @@ const Schema = z.object({
   age: z.string().pipe(z.coerce.number()),
 })
 
-type In  = z.input<typeof Schema>
-// { role?: string; age: string }        ← 调用方实际要传的东西
+type In = z.input<typeof Schema>
+//   ^?
 
 type Out = z.output<typeof Schema>
-// { role: string; age: number }         ← parse 之后拿到的东西
+//   ^?
 ```
 
 **踩坑现场**：把 DTO 类型写成 `z.infer`，结果因为字段有 `.default()`，类型里该字段变成必填，业务代码里 `service.create({ title: 'x' })` 就报缺少属性。
@@ -315,11 +328,9 @@ async function fetchUser(id: string): Promise<User> {
 
 ### 递归 schema 推不出类型
 
-```ts
-// ❌ TS 无法从 z.lazy 自动推断递归类型
-const Category = z.lazy(() => z.object({ children: z.array(Category) }))
+```ts twoslash
+import { z } from 'zod'
 
-// ✅ 手写类型 + 显式标注
 type Category = { name: string; children: Category[] }
 const CategorySchema: z.ZodType<Category> = z.lazy(() =>
   z.object({ name: z.string(), children: z.array(CategorySchema) }),

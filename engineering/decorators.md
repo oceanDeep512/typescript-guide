@@ -51,7 +51,7 @@ Controller('users')(UsersController)
 
 legacy 模式下，装饰器放在不同位置，拿到的参数不同：
 
-```ts
+```ts twoslash
 // ① 类装饰器：拿到构造函数
 function Controller<T extends new (...args: any[]) => any>(target: T): T | void {}
 
@@ -69,7 +69,11 @@ function Param(target: any, key: string, index: number) {}
 
 ### 执行顺序：求值从上到下，应用从下到上
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
+function A(): MethodDecorator { return () => {} }
+function B(): MethodDecorator { return () => {} }
+
 class C {
   @A()
   @B()

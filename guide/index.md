@@ -99,22 +99,3 @@ type MaybeUser = Nullable<User>
 本站的类型系统内容以 **TypeScript 5.9** 为准（Twoslash 实时编译用的就是它）。**TS 6 / 7 没有改变类型系统本身**——语法和语义都还在，变的是编译器引擎、默认值、和被删掉的老选项。相关内容集中在 [TypeScript 6 与 7](./typescript-7)，并在 [tsconfig 篇](./tsconfig)里以 🆕 TS7 标记逐项标注。
 :::
 
-## Twoslash 怎么用
-
-教程里带 **Twoslash** 标记的代码块是可以交互的：
-
-- 鼠标**悬停**在带虚线下划线的标识符上，会弹出它的真实类型
-- `//^?` 这一行会被替换成上一行表达式的推导结果
-- 带红色波浪线的地方是**故意保留的错误**，用来演示什么写法会报错
-
-```ts twoslash
-type Todo = { title: string; done: boolean }
-type Keys = keyof Todo
-//   ^?
-
-const arr = [1, 2, 3] as const
-type Elem = typeof arr[number]
-//   ^?
-```
-
-想自己改着玩时，每节末尾一般会给出一个可以直接打开的 Playground 链接。
