@@ -209,7 +209,16 @@
 .vp-doc .custom-block p { line-height: 1.7; }
 
 /* ---------- Twoslash ---------- */
-.twoslash-hover { border-bottom: 1px dotted var(--vp-c-brand-1); }
+/* 可点/可悬浮的标识符：库默认把下划线设成 transparent，只有 hover 到代码块上才显色
+   （.twoslash .twoslash-hover 特异性 0,2,0，会压过这里单类选择器写的规则）。
+   触屏根本没有 hover，用户看不出哪些标识符可以点，所以让下划线常驻显示。 */
+.twoslash .twoslash-hover {
+  border-bottom: 1px dotted var(--vp-c-brand-1);
+}
+/* 悬停时再提亮一档，保留交互反馈 */
+.twoslash:hover .twoslash-hover {
+  border-bottom-color: var(--vp-c-brand-2);
+}
 .twoslash .twoslash-popup-container {
   font-family: var(--vp-font-family-mono);
   font-size: 12.5px;
