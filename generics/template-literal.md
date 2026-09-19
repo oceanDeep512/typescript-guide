@@ -152,8 +152,9 @@ type T = typeof id
 
 ### 1. 联合展开会爆炸
 
-```ts
+```ts twoslash
 type Big = `${'a' | 'b' | 'c'}-${'x' | 'y' | 'z'}-${'1' | '2' | '3'}`
+//   ^?
 ```
 
 结果是 27 个成员。再多就会触发 "Expression produces a union type that is too complex to represent"。

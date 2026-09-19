@@ -6,13 +6,16 @@
 
 ### 起点：类型标注会被完全擦除
 
-```ts
+```ts twoslash
+declare const input: string
+// ---cut---
 interface User {
   name: string
   age: number
 }
 
 const user = JSON.parse(input) as User  // ⚠️ 这个 as 什么都没校验
+//    ^?
 ```
 
 `JSON.parse` 返回 `any`，`as User` 只是让编译器闭嘴。运行时它不检查任何东西——`input` 是 `{"name": 123}` 还是 `"hello"` 都能通过。
@@ -43,9 +46,15 @@ const user = JSON.parse(input) as User  // ⚠️ 这个 as 什么都没校验
 
 ## 二、不用库也能做，但你会写腻
 
-```ts
+```ts twoslash
+interface User {
+  name: string
+  age: number
+}
+// ---cut---
 // 手写校验
 function isUser(x: unknown): x is User {
+  //     ^?
   return (
     typeof x === 'object' && x !== null &&
     typeof (x as any).name === 'string' &&
@@ -105,7 +114,9 @@ if (!result.success) {
 
 ### 常用组合
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+// ---cut---
 // 嵌套与数组
 z.object({ items: z.array(z.object({ id: z.string() })) })
 
@@ -114,12 +125,14 @@ z.object({ bio: z.string().optional(), role: z.string().default('user') })
 
 // 判别联合（处理"不同形态的消息"最好用）
 const Event = z.discriminatedUnion('type', [
+//    ^?
   z.object({ type: z.literal('click'), x: z.number(), y: z.number() }),
   z.object({ type: z.literal('keypress'), key: z.string() }),
 ])
 
 // 转换：输入是字符串，输出是数字
-const Age = z.string().pipe(z.coerce.number().int().positive())
+const Age = z.string().transform(Number).pipe(z.number().int().positive())
+//    ^?
 ```
 
 ### 从已有 schema 派生
@@ -190,10 +203,13 @@ type Out = z.output<typeof Schema>
 
 因为手写两遍一定会不同步：
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+// ---cut---
 // ❌ 反模式：schema 和类型各写一遍
 type User = { name: string; age: number }
 const UserSchema = z.object({ name: z.string(), age: z.number(), email: z.string() })
+//    ^?
 //                                                              ^^^^^ schema 多了一个字段，类型不知道
 ```
 
@@ -313,12 +329,17 @@ npm 上各包解压后的体积（2026-09-20 实测）：zod 约 6.0MB、valibot
 
 ### 只在边界校验一次
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+const UserSchema = z.object({ id: z.string(), name: z.string(), age: z.number() })
+type User = z.infer<typeof UserSchema>
+// ---cut---
 // ✅ 边界 parse 一次，之后全部可信
 async function fetchUser(id: string): Promise<User> {
   const res = await fetch(`/api/users/${id}`)
   const data: unknown = await res.json()
   return UserSchema.parse(data)
+  //     ^?
 }
 
 // ❌ 每个函数里都 parse 一遍 —— 性能浪费且说明你的类型边界没划清

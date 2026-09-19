@@ -71,13 +71,16 @@ const typeProgramming = [
   { text: '编译性能', link: '/type-programming/performance' },
 ]
 
+// 「Schema 与运行时校验」排在「Node 与服务端类型」之前：
+// Node 篇讲请求边界时直接用 zod 做校验，先讲清 schema 是什么、类型怎么从 schema 反推，
+// 读到 Node 篇时才不会出现"zod 是什么"的断层。
 const engineering = [
   { text: '概览', link: '/engineering/' },
   { text: '工具链分工：tsc / tsx / tsup / vite', link: '/engineering/toolchain' },
   { text: 'React 与 Vue 中的类型', link: '/engineering/react-vue' },
   { text: '装饰器与 NestJS', link: '/engineering/decorators' },
-  { text: 'Node 与服务端类型', link: '/engineering/node' },
   { text: 'Schema 与运行时校验', link: '/engineering/schema' },
+  { text: 'Node 与服务端类型', link: '/engineering/node' },
   { text: '异步与迭代器', link: '/engineering/async-iterator' },
   { text: '流式与 SSE', link: '/engineering/streaming' },
   { text: 'ESM / CJS 与模块解析', link: '/engineering/module' },

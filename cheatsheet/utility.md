@@ -6,19 +6,29 @@
 
 <TypeCard name="Partial / Required / Readonly" badge="映射">
 
-```ts
+```ts twoslash
 type Partial<T>  = { [P in keyof T]?: T[P] }
 type Required<T> = { [P in keyof T]-?: T[P] }
 type Readonly<T> = { readonly [P in keyof T]: T[P] }
+
+type P = Partial<{ a: number; b: string }>
+//   ^?
+type R = Readonly<{ a: number }>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="Pick / Omit" badge="约束 / 组合">
 
-```ts
+```ts twoslash
 type Pick<T, K extends keyof T> = { [P in K]: T[P] }
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+
+type P = Pick<{ a: 1; b: 2; c: 3 }, 'a' | 'c'>
+//   ^?
+type O = Omit<{ a: 1; b: 2; c: 3 }, 'a' | 'c'>
+//   ^?
 ```
 
 `Omit` 是浅层的，深层要自己写递归。
@@ -27,16 +37,22 @@ type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
 
 <TypeCard name="Record" badge="映射">
 
-```ts
+```ts twoslash
 type Record<K extends keyof any, T> = { [P in K]: T }
+
+type R = Record<'x' | 'y', number>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="Mutable / DeepPartial" badge="手写常用">
 
-```ts
+```ts twoslash
 type Mutable<T> = { -readonly [P in keyof T]: T[P] }
+
+type M = Mutable<{ readonly a: number }>
+//   ^?
 
 type DeepPartial<T> = T extends (infer U)[]
   ? DeepPartial<U>[]
@@ -45,6 +61,9 @@ type DeepPartial<T> = T extends (infer U)[]
     : T extends object
       ? { [P in keyof T]?: DeepPartial<T[P]> }
       : T
+
+type DP = DeepPartial<{ a: number; nested: { b: string } }>
+//   ^?
 ```
 
 </TypeCard>
@@ -53,18 +72,26 @@ type DeepPartial<T> = T extends (infer U)[]
 
 <TypeCard name="Exclude / Extract" badge="分发">
 
-```ts
+```ts twoslash
 type Exclude<T, U> = T extends U ? never : T
 type Extract<T, U> = T extends U ? T : never
+
+type E = Exclude<'a' | 'b' | 'c', 'a' | 'b'>
+//   ^?
+type X = Extract<'a' | 'b' | 'c', 'a' | 'b'>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="NonNullable" badge="TS 4.8 改过">
 
-```ts
+```ts twoslash
 type NonNullable<T> = T & {} // 4.8+ 的实现
 // 4.8 之前：T extends null | undefined ? never : T
+
+type N = NonNullable<string | null | undefined>
+//   ^?
 ```
 
 </TypeCard>
@@ -89,31 +116,44 @@ type R = UnionToIntersection<{ a: 1 } | { b: 2 }>
 
 <TypeCard name="Parameters / ReturnType" badge="infer">
 
-```ts
+```ts twoslash
 type Parameters<T extends (...args: any) => any> =
   T extends (...args: infer P) => any ? P : never
 
 type ReturnType<T extends (...args: any) => any> =
   T extends (...args: any) => infer R ? R : any
+
+type P = Parameters<(x: number, y: string) => boolean>
+//   ^?
+type R = ReturnType<(x: number) => string[]>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="ConstructorParameters / InstanceType" badge="abstract new">
 
-```ts
+```ts twoslash
 type ConstructorParameters<T extends abstract new (...args: any) => any> =
   T extends abstract new (...args: infer P) => any ? P : never
 
 type InstanceType<T extends abstract new (...args: any) => any> =
   T extends abstract new (...args: any) => infer R ? R : any
+
+class Point {
+  constructor(public x: number, public y: number) {}
+}
+type CP = ConstructorParameters<typeof Point>
+//   ^?
+type IP = InstanceType<typeof Point>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="ThisParameterType / OmitThisParameter" badge="this">
 
-```ts
+```ts twoslash
 type ThisParameterType<T> =
   T extends (this: infer U, ...args: never) => any ? U : unknown
 
@@ -121,6 +161,14 @@ type OmitThisParameter<T> =
   unknown extends ThisParameterType<T>
     ? T
     : T extends (...args: infer A) => infer R ? (...args: A) => R : T
+
+function greet(this: { name: string }, msg: string): string {
+  return `${this.name}: ${msg}`
+}
+type T = ThisParameterType<typeof greet>
+//   ^?
+type O = OmitThisParameter<typeof greet>
+//   ^?
 ```
 
 </TypeCard>

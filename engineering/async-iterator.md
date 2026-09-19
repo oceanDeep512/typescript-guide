@@ -201,17 +201,18 @@ type Awaited<T> =
 
 **Node 的 `Readable` 本身就是 `AsyncIterable`**：
 
-```ts
+```ts twoslash
 import fs from 'node:fs'
-
+// ---cut---
 for await (const chunk of fs.createReadStream('a.txt')) {
+  //             ^?
   // chunk 是 Buffer
 }
 ```
 
 **Web 的 `ReadableStream` 需要适配**：
 
-```ts
+```ts twoslash
 async function* toIterable<T>(
   stream: ReadableStream<T>
 ): AsyncGenerator<T, void, unknown> {
@@ -219,6 +220,7 @@ async function* toIterable<T>(
   try {
     while (true) {
       const { done, value } = await reader.read()
+      //            ^?
       if (done) return
       yield value
     }

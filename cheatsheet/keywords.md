@@ -140,11 +140,14 @@ type H = typeof r.home
 
 <TypeCard name="修饰符 + / -" badge="语法">
 
-```ts
+```ts twoslash
 type Partial<T>  = { [K in keyof T]?: T[K] }              // 加 ?
 type Required<T> = { [K in keyof T]-?: T[K] }             // 删 ?
 type Readonly<T> = { readonly [K in keyof T]: T[K] }      // 加 readonly
 type Mutable<T>  = { -readonly [K in keyof T]: T[K] }     // 删 readonly
+
+type P = Partial<{ a: number; b: string }>
+//   ^?
 ```
 
 修饰符是**保留**的，不是覆盖的。
@@ -187,9 +190,13 @@ type R = Split<'a-b'>
 
 <TypeCard name="in / out 变型注解" badge="TS 4.7">
 
-```ts
+```ts twoslash
 interface Producer<out T> { get(): T }   // 只出现在输出位置
 interface Consumer<in T>  { put(x: T): void } // 只出现在输入位置
+
+declare const ps: Producer<string>
+const ps2: Producer<unknown> = ps // out → 协变：string 可赋给 unknown
+//    ^?
 ```
 
 标反会报错；标注正确能让 TS 跳过结构化比较，检查更快。

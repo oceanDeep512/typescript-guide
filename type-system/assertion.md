@@ -7,6 +7,7 @@
 ```ts twoslash
 declare const x: unknown
 const s = x as string
+//    ^?
 ```
 
 `as` 不做任何运行时转换，只是让编译器闭嘴。它只在两种情况下安全：
@@ -18,6 +19,7 @@ const s = x as string
 
 ```ts twoslash
 const n = '123' as unknown as number // 编译通过，运行时是字符串
+//    ^?
 ```
 
 <Callout type="danger">
@@ -30,6 +32,7 @@ interface User {
   age: number
 }
 const u = { name: 'a' } as User
+//    ^?
 // age 字段根本不存在，但编译器不管
 ```
 

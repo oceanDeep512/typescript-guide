@@ -10,7 +10,9 @@ type-challenges 的 warm-up + easy 共 14 题。这里收录 8 道最代表性�
 
 实现 `MyPick<T, K>`，从 `T` 中选出属性 `K`。不能使用内置的 `Pick`。
 
-```ts
+```ts twoslash
+type MyPick<T, K extends keyof T> = { [P in K]: T[P] }
+
 interface Todo {
   title: string
   description: string
@@ -18,7 +20,7 @@ interface Todo {
 }
 
 type TodoPreview = MyPick<Todo, 'title' | 'completed'>
-// 期望 { title: string; completed: boolean }
+//   ^?
 ```
 
 <template #answer>
@@ -50,12 +52,16 @@ type TodoPreview = MyPick<Todo, 'title' | 'completed'>
 
 实现 `MyReadonly<T>`，让所有属性变成只读。
 
-```ts
+```ts twoslash
+// @errors: 2540
+type MyReadonly<T> = { readonly [P in keyof T]: T[P] }
+
 interface Todo {
   title: string
 }
 const todo: MyReadonly<Todo> = { title: 'x' }
-todo.title = 'y' // 应该报错
+//    ^?
+todo.title = 'y'
 ```
 
 <template #answer>
@@ -81,9 +87,13 @@ type R = MyReadonly<Todo>
 
 实现 `First<T>`，取元组的第一个元素类型。
 
-```ts
-type A = First<[3, 2, 1]> // 3
-type B = First<[]> // never
+```ts twoslash
+type First<T extends unknown[]> = T extends [infer F, ...unknown[]] ? F : never
+
+type A = First<[3, 2, 1]>
+//   ^?
+type B = First<[]>
+//   ^?
 ```
 
 <template #answer>
@@ -108,8 +118,11 @@ type B = First<[]>
 
 实现 `Length<T>`，返回元组的长度。
 
-```ts
-type A = Length<[1, 2, 3]> // 3
+```ts twoslash
+type Length<T extends readonly unknown[]> = T['length']
+
+type A = Length<[1, 2, 3]>
+//   ^?
 ```
 
 <template #answer>
@@ -134,8 +147,11 @@ type B = Length<[]>
 
 实现 `MyExclude<T, U>`，从联合 `T` 中剔除可以赋值给 `U` 的成员。
 
-```ts
-type A = MyExclude<'a' | 'b' | 'c', 'a'> // 'b' | 'c'
+```ts twoslash
+type MyExclude<T, U> = T extends U ? never : T
+
+type A = MyExclude<'a' | 'b' | 'c', 'a'>
+//   ^?
 ```
 
 <template #answer>
@@ -158,9 +174,13 @@ type A = MyExclude<'a' | 'b' | 'c', 'a'>
 
 实现 `MyAwaited<T>`，取出 `Promise` 的内容类型（支持嵌套）。
 
-```ts
-type A = MyAwaited<Promise<string>> // string
-type B = MyAwaited<Promise<Promise<number>>> // number
+```ts twoslash
+type MyAwaited<T> = T extends Promise<infer U> ? MyAwaited<U> : T
+
+type A = MyAwaited<Promise<string>>
+//   ^?
+type B = MyAwaited<Promise<Promise<number>>>
+//   ^?
 ```
 
 <template #answer>
@@ -185,9 +205,13 @@ type B = MyAwaited<Promise<Promise<number>>>
 
 实现 `If<C, T, F>`：`C` 为 `true` 返回 `T`，否则返回 `F`。
 
-```ts
-type A = If<true, 'a', 'b'> // 'a'
-type B = If<false, 'a', 'b'> // 'b'
+```ts twoslash
+type If<C extends boolean, T, F> = C extends true ? T : F
+
+type A = If<true, 'a', 'b'>
+//   ^?
+type B = If<false, 'a', 'b'>
+//   ^?
 ```
 
 <template #answer>
@@ -212,8 +236,11 @@ type B = If<false, 'a', 'b'>
 
 实现 `Push<T, U>`，往元组末尾追加一个类型。
 
-```ts
-type A = Push<[1, 2], 3> // [1, 2, 3]
+```ts twoslash
+type Push<T extends unknown[], U> = [...T, U]
+
+type A = Push<[1, 2], 3>
+//   ^?
 ```
 
 <template #answer>

@@ -23,10 +23,13 @@ type C = Inv<'x'> extends Inv<string> ? true : false
 
 <TypeCard name="in / out 注解" badge="TS 4.7">
 
-```ts
+```ts twoslash
 interface Producer<out T> { get(): T }
 interface Consumer<in T>  { put(x: T): void }
 interface Both<in out T>  { v: T }
+
+type P = Producer<string>
+//   ^?
 ```
 
 两个好处：写反会报错；标注正确能让 TS 跳过结构化比较，检查更快。

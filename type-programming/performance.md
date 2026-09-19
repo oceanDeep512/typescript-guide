@@ -20,19 +20,22 @@ TS 的类型检查本质上是在**对类型做结构化比较**。开销主要�
 
 ### 1. 深层递归 + 映射类型
 
-```ts
+```ts twoslash
 // 贵：每层都重新映射整个对象
 type DeepPartial<T> = {
   [K in keyof T]?: DeepPartial<T[K]>
 }
+type DP = DeepPartial<{ a: string; b: { c: number } }>
+//   ^?
 ```
 
 嵌套 10 层、每层 20 个字段，就会产生几百个类型实例。
 
 ### 2. 大规模模板字面量联合
 
-```ts
+```ts twoslash
 type Big = `${'a' | 'b' | 'c'}-${'x' | 'y' | 'z'}-${'1' | '2' | '3'}-${'p' | 'q'}`
+//   ^?
 ```
 
 笛卡尔积是 3×3×3×2 = 54 个。上限大概是 10 万个成员，超过就报：
@@ -43,18 +46,22 @@ Expression produces a union type that is too complex to represent
 
 ### 3. 元组计数大数
 
-```ts
+```ts twoslash
 type Tuple<N extends number, Acc extends unknown[] = []> =
   Acc['length'] extends N ? Acc : Tuple<N, [...Acc, unknown]>
+type T3 = Tuple<3>
+//   ^?
 ```
 
 `Tuple<500>` 要构造 500 个元素的元组类型。别在真实项目里这么做。
 
 ### 4. 循环引用的条件类型
 
-```ts
+```ts twoslash
 // 每次使用都要重新求值，且容易爆深度
 type Recursive<T> = T extends object ? { [K in keyof T]: Recursive<T[K]> } : T
+type R = Recursive<{ a: string; b: number }>
+//   ^?
 ```
 
 ## 优化手段

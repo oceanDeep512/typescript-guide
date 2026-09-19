@@ -10,8 +10,10 @@
 
 把所有属性变成可选。
 
-```ts
+```ts twoslash
 type Partial<T> = { [P in keyof T]?: T[P] }
+type P = Partial<{ a: string; b: number }>
+//   ^?
 ```
 
 </TypeCard>
@@ -20,24 +22,30 @@ type Partial<T> = { [P in keyof T]?: T[P] }
 
 把所有属性变成必填。
 
-```ts
+```ts twoslash
 type Required<T> = { [P in keyof T]-?: T[P] }
+type R = Required<{ a?: string; b?: number }>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="Readonly<T>" badge="映射">
 
-```ts
+```ts twoslash
 type Readonly<T> = { readonly [P in keyof T]: T[P] }
+type Ro = Readonly<{ a: string; b: number }>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="Pick<T, K>" badge="约束 + 映射">
 
-```ts
+```ts twoslash
 type Pick<T, K extends keyof T> = { [P in K]: T[P] }
+type P = Pick<{ a: string; b: number }, 'a'>
+//   ^?
 ```
 
 `K extends keyof T` 保证只能挑存在的键。
@@ -46,8 +54,10 @@ type Pick<T, K extends keyof T> = { [P in K]: T[P] }
 
 <TypeCard name="Omit<T, K>" badge="Pick + Exclude">
 
-```ts
+```ts twoslash
 type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+type O = Omit<{ a: string; b: number }, 'a'>
+//   ^?
 ```
 
 注意它是**浅层**的，嵌套对象里的键不会被剔除。
@@ -64,8 +74,10 @@ type DeepOmit<T, K extends string> = T extends (infer U)[]
 
 <TypeCard name="Record<K, T>" badge="映射">
 
-```ts
+```ts twoslash
 type Record<K extends keyof any, T> = { [P in K]: T }
+type R = Record<'a' | 'b', number>
+//   ^?
 ```
 
 </TypeCard>
@@ -74,8 +86,10 @@ type Record<K extends keyof any, T> = { [P in K]: T }
 
 <TypeCard name="Exclude<T, U>" badge="分发">
 
-```ts
+```ts twoslash
 type Exclude<T, U> = T extends U ? never : T
+type A = Exclude<'a' | 'b' | 'c', 'a'>
+//   ^?
 ```
 
 原理：分发后不满足的变成 `never`，`never` 在联合里消失。
@@ -84,20 +98,24 @@ type Exclude<T, U> = T extends U ? never : T
 
 <TypeCard name="Extract<T, U>" badge="分发">
 
-```ts
+```ts twoslash
 type Extract<T, U> = T extends U ? T : never
+type B = Extract<string | number, string>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="NonNullable<T>" badge="TS 4.8 改过实现">
 
-```ts
+```ts twoslash
 // 4.8 之前
 type Old<T> = T extends null | undefined ? never : T
 
 // 4.8 之后
 type NonNullable<T> = T & {}
+type N = NonNullable<string | null | undefined>
+//   ^?
 ```
 
 改成 `T & {}` 的原因：旧实现会**分发**，把 `NonNullable<string | null>` 变成 `string` 是对的，但对 `any` 的处理有 bug（`any` 会被分发成两个分支）。`T & {}` 直接利用"交叉 `{}` 排除 null/undefined"的结构性质，更快也更准。
@@ -108,18 +126,22 @@ type NonNullable<T> = T & {}
 
 <TypeCard name="Parameters<T>" badge="infer">
 
-```ts
+```ts twoslash
 type Parameters<T extends (...args: any) => any> =
   T extends (...args: infer P) => any ? P : never
+type P = Parameters<(x: string, y: number) => void>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="ReturnType<T>" badge="infer">
 
-```ts
+```ts twoslash
 type ReturnType<T extends (...args: any) => any> =
   T extends (...args: any) => infer R ? R : any
+type R = ReturnType<(x: string) => number>
+//   ^?
 ```
 
 注意兜底是 `any` 不是 `never`。
@@ -128,12 +150,20 @@ type ReturnType<T extends (...args: any) => any> =
 
 <TypeCard name="ConstructorParameters / InstanceType" badge="abstract new">
 
-```ts
+```ts twoslash
 type ConstructorParameters<T extends abstract new (...args: any) => any> =
   T extends abstract new (...args: infer P) => any ? P : never
 
 type InstanceType<T extends abstract new (...args: any) => any> =
   T extends abstract new (...args: any) => infer R ? R : any
+
+class Foo {
+  constructor(public x: number, public y: string) {}
+}
+type CP = ConstructorParameters<typeof Foo>
+//   ^?
+type IT = InstanceType<typeof Foo>
+//   ^?
 ```
 
 `abstract new` 是关键——加了 `abstract` 才能同时匹配普通类和抽象类。
@@ -142,7 +172,7 @@ type InstanceType<T extends abstract new (...args: any) => any> =
 
 <TypeCard name="ThisParameterType / OmitThisParameter" badge="this 参数">
 
-```ts
+```ts twoslash
 type ThisParameterType<T> =
   T extends (this: infer U, ...args: never) => any ? U : unknown
 
@@ -150,6 +180,12 @@ type OmitThisParameter<T> =
   unknown extends ThisParameterType<T>
     ? T
     : T extends (...args: infer A) => infer R ? (...args: A) => R : T
+
+type F = (this: { ctx: number }, a: string) => void
+type TP = ThisParameterType<F>
+//   ^?
+type OT = OmitThisParameter<F>
+//   ^?
 ```
 
 </TypeCard>
@@ -158,7 +194,7 @@ type OmitThisParameter<T> =
 
 <TypeCard name="Awaited<T>" badge="TS 4.5 · 递归">
 
-```ts
+```ts twoslash
 type Awaited<T> =
   T extends null | undefined ? T :
     T extends object & { then(onfulfilled: infer F): any }
@@ -166,6 +202,8 @@ type Awaited<T> =
         ? Awaited<V>
         : never
       : T
+type R = Awaited<Promise<Promise<number>>>
+//   ^?
 ```
 
 这段源码本身就很值得背：
@@ -220,16 +258,19 @@ type A = Capitalize<'abc'>
 
 <TypeCard name="Mutable<T>" badge="常用">
 
-```ts
+```ts twoslash
 type Mutable<T> = { -readonly [P in keyof T]: T[P] }
+type M = Mutable<{ readonly a: string; b: number }>
+//   ^?
 ```
 
 </TypeCard>
 
 <TypeCard name="Prettify<T>" badge="调试必备">
 
-```ts
+```ts twoslash
 type Prettify<T> = { [K in keyof T]: T[K] } & {}
+//   ^?
 ```
 
 把交叉类型拍平成可读的对象字面量。
@@ -244,7 +285,7 @@ type P = Prettify<{ a: string } & { b: number }>
 
 <TypeCard name="DeepPartial<T>" badge="常用">
 
-```ts
+```ts twoslash
 type DeepPartial<T> = T extends (infer U)[]
   ? DeepPartial<U>[]
   : T extends Function
@@ -252,6 +293,8 @@ type DeepPartial<T> = T extends (infer U)[]
     : T extends object
       ? { [P in keyof T]?: DeepPartial<T[P]> }
       : T
+type DP = DeepPartial<{ a: string; b: { c: number } }>
+//   ^?
 ```
 
 顺序很关键：**数组 → 函数 → 对象**，因为前两者都是 `object` 的子类型。
@@ -260,7 +303,7 @@ type DeepPartial<T> = T extends (infer U)[]
 
 <TypeCard name="UnionToIntersection<U>" badge="经典题">
 
-```ts
+```ts twoslash
 type UnionToIntersection<U> = (
   U extends any ? (k: U) => void : never
 ) extends (k: infer I) => void

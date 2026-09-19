@@ -41,6 +41,7 @@ npm run preview  # 预览构建产物
         ├── Exercise.vue       # 折叠式练习题
         ├── TypeCard.vue       # 速查卡片
         └── Callout.vue        # 提示块
+```
 
 目录顺序即推荐阅读顺序（与侧边栏一致，详见 `guide/index.md` 的「阅读路线」）：
 
@@ -55,14 +56,13 @@ generics/          泛型：泛型基础 → keyof/typeof → 映射类型 → �
 type-programming/  类型编程：心智模型 → 六大套路 → 调试与类型测试
                    → 递归与元组计数 → any/unknown/never → 编译性能
 engineering/       工程实践：概览 → 工具链 → React/Vue → 装饰器与 NestJS
-                   → Node → Schema 与运行时校验 → 异步与迭代器 → 流式 SSE
+                   → Schema 与运行时校验 → Node → 异步与迭代器 → 流式 SSE
                    → ESM/CJS 与模块解析 → 发布带类型的包
 cheatsheet/        速查表：关键字、工具类型、套路、边界、异步、变型与调试
 practice/          题库：热身与 Easy、Medium 精选（折叠式答案）
 ```
 
 后两篇（速查表、题库）是按需查阅性质，不参与阅读顺序。
-```
 
 ## 技术栈
 

@@ -8,7 +8,9 @@ TS 会尽量自己推导类型，你只在它推不出来的时候标注。
 
 ```ts twoslash
 let a = 1 // 推导出 number，不需要写 let a: number = 1
+//  ^?
 const b = 1 // 推导出字面量 1
+//    ^?
 
 let c: number // 只有声明没赋值时才必须标注
 let d: string[] = [] // 空数组必须标注，否则是 any[]

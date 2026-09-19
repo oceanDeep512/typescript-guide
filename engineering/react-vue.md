@@ -6,8 +6,12 @@
 
 ### 组件 props
 
-```ts
+```tsx twoslash
+// @jsx: react-jsx
+import * as React from 'react'
+// ---cut---
 type Props = {
+//   ^?
   title: string
   count?: number
   onClick: (id: string) => void
@@ -30,7 +34,10 @@ React 18 之后 `children` 不再自动注入，用 `React.ReactNode` 显式声�
 
 ### 泛型组件
 
-```ts
+```tsx twoslash
+// @jsx: react-jsx
+import * as React from 'react'
+// ---cut---
 interface ListProps<T> {
   items: T[]
   renderItem: (item: T) => React.ReactNode
@@ -40,7 +47,7 @@ function List<T>({ items, renderItem }: ListProps<T>) {
   return <ul>{items.map((item, i) => <li key={i}>{renderItem(item)}</li>)}</ul>
 }
 
-// 调用时 T 会自动推导
+// 调用时 T 会自动推导（这里是 number，所以 n 能直接 .toFixed）
 ;<List items={[1, 2, 3]} renderItem={(n) => n.toFixed(2)} />
 ```
 
@@ -48,8 +55,11 @@ function List<T>({ items, renderItem }: ListProps<T>) {
 
 从 React 的类型里取，别手写：
 
-```ts
+```ts twoslash
+import * as React from 'react'
+// ---cut---
 type ClickEv = React.MouseEvent<HTMLButtonElement>
+//   ^?
 type ChangeEv = React.ChangeEvent<HTMLInputElement>
 type FormEv = React.FormEvent<HTMLFormElement>
 
@@ -64,14 +74,18 @@ function App() {
 
 ### Hooks
 
-```ts
+```ts twoslash
+import { useState, useRef } from 'react'
+declare type User = { id: string; name: string }
+// ---cut---
 // useState：能推导就别标
 const [count, setCount] = useState(0) // number
+//     ^?
 const [user, setUser] = useState<User | null>(null) // 需要显式标注
 
 // useRef：DOM ref 要给 null 初值
 const ref = useRef<HTMLDivElement>(null)
-
+//    ^?
 // useReducer：判别联合最好用
 type Action =
   | { type: 'increment' }
@@ -91,8 +105,12 @@ function reducer(state: number, action: Action): number {
 
 ### forwardRef（React 18）
 
-```ts
+```tsx twoslash
+// @jsx: react-jsx
+import { forwardRef } from 'react'
+// ---cut---
 const Input = forwardRef<HTMLInputElement, { value: string }>(
+//    ^?
   function Input({ value }, ref) {
     return <input ref={ref} value={value} />
   }
@@ -103,9 +121,14 @@ const Input = forwardRef<HTMLInputElement, { value: string }>(
 
 ### 常见坑：默认导出组件的类型
 
-```ts
+```tsx twoslash
+// @jsx: react-jsx
+import * as React from 'react'
+declare type Props = { title: string; count?: number }
+// ---cut---
 // 用 React.FC 的写法（不推荐）
 const A: React.FC<Props> = (props) => <div />
+//    ^?
 
 // 直接标注 props（推荐）
 function B(props: Props) {
@@ -146,23 +169,30 @@ React 不受影响：`.tsx` 是原生 TS 语法，`tsc` 直接处理，也不需
 
 ### 组合式 API 的类型推导
 
-```ts
+```ts twoslash
 import { ref, computed, reactive } from 'vue'
-
+declare type User = { id: string; name: string }
+// ---cut---
 const count = ref(0) // Ref<number>
+//    ^?
 const user = ref<User | null>(null) // Ref<User | null>
 const double = computed(() => count.value * 2) // ComputedRef<number>
+//    ^?
 
 const state = reactive({ items: [] as User[] }) // reactive 里数组要断言
+//    ^?
 ```
 
 `ref` 的推导很聪明，但**嵌套对象会被 `UnwrapRef` 解包**，深层类型可能和你写的不一样。遇到问题时用 `shallowRef` 或显式标注。
 
 ### props 声明
 
-```ts
+```ts twoslash
+declare function defineProps<T>(): T
+// ---cut---
 // 运行时声明 + 类型推导
 const props = defineProps<{
+//    ^?
   title: string
   count?: number
 }>()
@@ -176,8 +206,11 @@ const { title, count = 0 } = defineProps<{
 
 泛型写法（复杂约束）：
 
-```ts
+```ts twoslash
+declare function defineProps<T>(): T
+// ---cut---
 const props = defineProps<{
+//    ^?
   items: Array<{ id: string; label: string }>
   modelValue?: string
 }>()
@@ -185,13 +218,17 @@ const props = defineProps<{
 
 ### emits
 
-```ts
+```ts twoslash
+declare function defineEmits<T extends Record<string, unknown[]>>(): <K extends keyof T>(event: K, ...args: T[K]) => void
+// ---cut---
 const emit = defineEmits<{
+//    ^?
   update: [id: string, value: string]
   close: []
 }>()
 
 emit('update', '1', 'x') // 参数类型被检查
+// emit('update', '1')   // 少一个参数会报错
 ```
 
 3.3+ 的元组语法比旧的对象语法简洁很多。
@@ -214,25 +251,32 @@ defineProps<{
 
 不管 React 还是 Vue，异步状态都应该这么写：
 
-```ts
+```ts twoslash
 type AsyncState<T> =
+//   ^?
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; data: T }
   | { status: 'error'; error: Error }
+
+type UserState = AsyncState<{ id: string }>
+//   ^?
 ```
 
 好处：非法状态无法表示（`{ status: 'loading', data: ... }` 写不出来），配合 `switch` / `v-if` 有穷尽性检查。
 
 ### 表单类型从 schema 推导
 
-```ts
+```ts twoslash
+import { z } from 'zod'
+// ---cut---
 const FormSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   age: z.number().min(0),
 })
 
 type FormData = z.infer<typeof FormSchema>
+//   ^?
 ```
 
 改 schema 自动改类型，不会出现"加了字段忘了改类型"。

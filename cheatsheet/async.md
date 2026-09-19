@@ -21,7 +21,7 @@
 
 ## 完整签名
 
-```ts
+```ts twoslash
 interface Iterator<T, TReturn = any, TNext = undefined> {
   next(...args: [] | [TNext]): IteratorResult<T, TReturn>
   return?(value?: TReturn): IteratorResult<T, TReturn>
@@ -57,6 +57,9 @@ interface AsyncGenerator<T = unknown, TReturn = any, TNext = any>
   throw(e: any): Promise<IteratorResult<T, TReturn>>
   [Symbol.asyncIterator](): AsyncGenerator<T, TReturn, TNext>
 }
+
+type NextSig = Iterator<string, number>['next']
+//   ^?
 ```
 
 ## IteratorResult 是判别联合

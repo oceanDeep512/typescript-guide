@@ -10,8 +10,11 @@ medium 里 80% 的题都是六大套路的组合。做题前先判断属于哪�
 
 实现 `MyReturnType<T>`，不用内置的 `ReturnType`。
 
-```ts
-type A = MyReturnType<() => string> // string
+```ts twoslash
+type MyReturnType<T> = T extends (...args: any[]) => infer R ? R : never
+
+type A = MyReturnType<() => string>
+//   ^?
 ```
 
 <template #answer>
@@ -36,14 +39,16 @@ type B = MyReturnType<(x: number) => boolean>
 
 实现 `MyOmit<T, K>`，剔除指定的键。
 
-```ts
+```ts twoslash
+type MyOmit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+
 interface Todo {
   title: string
   description: string
   completed: boolean
 }
 type A = MyOmit<Todo, 'description' | 'completed'>
-// { title: string }
+//   ^?
 ```
 
 <template #answer>
@@ -79,9 +84,17 @@ type OmitByRemap<T, K extends keyof any> = {
 
 递归地把所有属性（含嵌套）变成只读。
 
-```ts
-type A = DeepReadonly<{ a: { b: string } }>
-// { readonly a: { readonly b: string } }
+```ts twoslash
+type DeepReadonly<T> = T extends (infer U)[]
+  ? DeepReadonly<U>[]
+  : T extends Function
+    ? T
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T
+
+type A = DeepReadonly<{ a: { b: string }; c: number[] }>
+//   ^?
 ```
 
 <template #answer>
@@ -110,8 +123,11 @@ type A = DeepReadonly<{ a: { b: string }; c: number[] }>
 
 把元组转成元素类型的联合。
 
-```ts
-type A = TupleToUnion<[string, number]> // string | number
+```ts twoslash
+type TupleToUnion<T extends unknown[]> = T[number]
+
+type A = TupleToUnion<[string, number]>
+//   ^?
 ```
 
 <template #answer>
@@ -134,8 +150,19 @@ type A = TupleToUnion<[string, number]>
 
 实现 `ReplaceAll<S, From, To>`，替换字符串里所有匹配。
 
-```ts
-type A = ReplaceAll<'a-b-c', '-', '/'> // 'a/b/c'
+```ts twoslash
+type ReplaceAll<
+  S extends string,
+  From extends string,
+  To extends string
+> = From extends ''
+  ? S
+  : S extends `${infer L}${From}${infer R}`
+    ? `${L}${To}${ReplaceAll<R, From, To>}`
+    : S
+
+type A = ReplaceAll<'a-b-c', '-', '/'>
+//   ^?
 ```
 
 <template #answer>
@@ -170,9 +197,15 @@ type A = ReplaceAll<'a-b-c', '-', '/'>
 
 把联合类型转成交叉类型。
 
-```ts
+```ts twoslash
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never
+
 type A = UnionToIntersection<{ a: 1 } | { b: 2 }>
-// { a: 1 } & { b: 2 }
+//   ^?
 ```
 
 <template #answer>
@@ -204,9 +237,13 @@ type A = UnionToIntersection<{ a: 1 } | { b: 2 }>
 
 把对象的每个属性转成对应的 getter 方法。
 
-```ts
+```ts twoslash
+type Getters<T> = {
+  [K in keyof T as `get${Capitalize<K & string>}`]: () => T[K]
+}
+
 type A = Getters<{ name: string; age: number }>
-// { getName: () => string; getAge: () => number }
+//   ^?
 ```
 
 <template #answer>
@@ -234,8 +271,14 @@ type A = Getters<{ name: string; age: number }>
 
 去掉字符串左侧的空白字符（空格、换行、制表符）。
 
-```ts
-type A = TrimLeft<'  \n\t hello'> // 'hello'
+```ts twoslash
+type Space = ' ' | '\n' | '\t'
+type TrimLeft<S extends string> = S extends `${Space}${infer R}`
+  ? TrimLeft<R>
+  : S
+
+type A = TrimLeft<'  \n\t hello'>
+//   ^?
 ```
 
 <template #answer>

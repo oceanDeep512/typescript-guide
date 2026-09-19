@@ -46,11 +46,14 @@ type P = Parameters<typeof f>
 
 ### 联合的长度
 
-```ts ts
+```ts twoslash
 type A = 'a' | 'b' | 'a' // 重复的会合并 → 'a' | 'b'
 type B = string | 'a' // 'a' 被 string 吸收 → string
+//   ^?
 type C = any | string // any 吸收一切 → any
+//   ^?
 type D = never | string // never 被吸收 → string
+//   ^?
 ```
 
 最后两条是类型编程的基础：**`never` 在联合里会消失**，所以可以用它来"过滤"联合成员。

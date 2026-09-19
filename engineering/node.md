@@ -25,11 +25,14 @@ npm i -D @types/node
 
 ### 请求与响应的类型边界
 
-```ts
-import type { Request, Response, NextFunction } from 'express'
-
+```ts twoslash
+// @moduleResolution: bundler
+import type { Express, Request, Response } from 'express'
+declare const app: Express
+// ---cut---
 app.get('/users/:id', (req: Request, res: Response) => {
-  const id = req.params.id // string（Express 5 之前是 any）
+  const id = req.params.id
+  //    ^?
   res.json({ id })
 })
 ```
@@ -40,17 +43,24 @@ Express 的类型里，很多地方是 `any`：
 - `req.query` —— `any`
 - `req.params` —— Express 4 里是 `any`
 
-正确做法是**在每个 handler 的边界处校验**：
+注意 `^?` 的结果：`req.params.id` 其实是 `string | string[] | undefined`，**不是 `string`**。
+路径参数在类型层面没有"一定存在、一定是字符串"的保证，所以下面这种写法才是正解——**在每个 handler 的边界处校验**（schema 是什么、类型怎么从 schema 反推，见上一篇 [Schema 与运行时校验](./schema)）：
 
-```ts
+```ts twoslash
+// @moduleResolution: bundler
+import type { Express } from 'express'
 import { z } from 'zod'
-
+declare const app: Express
+// ---cut---
 const ParamsSchema = z.object({ id: z.string().uuid() })
 
 app.get('/users/:id', (req, res) => {
-  const { id } = ParamsSchema.parse(req.params) // 校验后 id 是 string
+  const params = ParamsSchema.parse(req.params)
+  //    ^?
 })
 ```
+
+校验之后 `params.id` 才是真正的 `string`（而且是 uuid 格式，运行时也真的检查过了）。
 
 ### 给 Request 加字段（中间件传值）
 
@@ -128,7 +138,10 @@ TypeBox 的 schema 和 JSON Schema 同构，一份东西同时用于运行时校
 
 ## 环境变量
 
-```ts
+```ts twoslash
+// @moduleResolution: bundler
+declare const process: { env: Record<string, string | undefined> }
+// ---cut---
 // src/env.ts
 function required(name: string): string {
   const v = process.env[name]
@@ -140,13 +153,18 @@ export const env = {
   PORT: Number(required('PORT')),
   DATABASE_URL: required('DATABASE_URL'),
 } as const
+//   ^?
 ```
 
 在启动时一次性校验，之后全项目拿到的都是可信类型。不要用 `process.env.X!` 到处断言。
 
 ## 错误处理
 
-```ts
+```ts twoslash
+// @moduleResolution: bundler
+import type { Express, Request, Response, NextFunction } from 'express'
+declare const app: Express
+// ---cut---
 class AppError extends Error {
   constructor(
     message: string,
@@ -162,6 +180,9 @@ function isAppError(e: unknown): e is AppError {
   return e instanceof AppError
 }
 
+const narrowed = (e: unknown) => (isAppError(e) ? e : null)
+//    ^?
+
 app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   if (isAppError(err)) {
     res.status(err.statusCode).json({ code: err.code })
@@ -173,6 +194,7 @@ app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
 ```
 
 注意错误中间件的参数必须是 4 个，Express 靠 `fn.length` 区分。
+类型守卫的返回值是 `AppError | null`——**守卫的意义就在于把 `unknown` 收窄成能点出字段的类型**。
 
 ## 数据库
 
@@ -209,13 +231,15 @@ type NewUser = typeof users.$inferInsert
 
 ### 手写 SQL 的情况
 
-```ts
+```ts twoslash
+declare const db: { query: <T>(sql: string) => Promise<T[]> }
+// ---cut---
 type Row = { id: string; name: string }
 const rows = await db.query<Row>('SELECT id, name FROM users')
-// 这是你声称的类型，运行时不校验
+//    ^?
 ```
 
-手写 SQL 时要意识到 `<Row>` 只是一个断言。
+手写 SQL 时要意识到 `<Row>` 只是一个断言：`rows` 确实是 `Row[]`，但这个类型是你**声称**的，运行时没人替你校验。
 
 ## 流式响应
 
@@ -237,10 +261,17 @@ Node 22 装了 `@types/node@16`，新 API 会报"不存在"。反过来 `AsyncIt
 
 ### 4. 中间件的类型丢失
 
-```ts
+```ts twoslash
+// @moduleResolution: bundler
+import type { Express, RequestHandler } from 'express'
+declare const app: Express
+declare const authMiddleware: RequestHandler
+// ---cut---
 // Express 的中间件链是"弱类型"的，req 上的东西加了但类型不知道
 app.use(authMiddleware) // 加了 req.userId，但类型里没有
 ```
+
+悬停 `authMiddleware` 只能看到 `RequestHandler`——**运行时给 `req` 挂了什么，类型系统一概不知**，这是 Express 的结构性短板。
 
 解决：用上面说的模块增强，或者换 Fastify / tRPC / Hono。
 

@@ -4,14 +4,19 @@
 
 ## 一句话：装饰器是「在定义时执行的标注函数」
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
+import { Controller } from '@nestjs/common'
+// ---cut---
 @Controller('users')   // ← 这个就是装饰器
 class UsersController {}
 ```
 
 去掉语法糖，它等价于：
 
-```ts
+```ts twoslash
+declare function Controller(prefix: string): <T>(target: T) => T
+// ---cut---
 class UsersController {}
 // 类定义完成后，立刻执行一次
 Controller('users')(UsersController)
@@ -91,9 +96,14 @@ class C {
 
 ### 问题的起点：运行时不知道类型
 
-```ts
+```ts twoslash
+import { Controller } from '@nestjs/common'
+// @experimentalDecorators: true
+declare class UsersService {}
+// ---cut---
 class UsersController {
   constructor(private usersService: UsersService) {}
+//                    ^?
 }
 ```
 
@@ -141,12 +151,16 @@ class UsersController {
 
 实测（TypeScript 7.0.2，`experimentalDecorators` + `emitDecoratorMetadata`）：
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
+import { Controller, Get, Param } from '@nestjs/common'
+// ---cut---
 // 源码
 @Controller('users')
 class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string): string { return id }
+//^?
 }
 ```
 
@@ -165,9 +179,12 @@ UsersController = __decorate([ Controller('users') ], UsersController);
 
 运行时用 `reflect-metadata` 就能读回来：
 
-```ts
+```ts twoslash
 import 'reflect-metadata'
-Reflect.getMetadata('design:paramtypes', UsersController.prototype, 'findOne')
+declare const UsersController: { prototype: object }
+// ---cut---
+const paramtypes = Reflect.getMetadata('design:paramtypes', UsersController.prototype, 'findOne')
+//    ^?
 // → [String]
 ```
 
@@ -195,14 +212,14 @@ Reflect.getMetadata('design:paramtypes', UsersController.prototype, 'findOne')
 
 ### 各类装饰器对应关系
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
 import { Controller, Get, Injectable, Module, Param } from '@nestjs/common'
-
-@Module({ providers: [UsersService], controllers: [UsersController] })  // 类装饰器
-export class UsersModule {}
-
+// ---cut---
 @Injectable()          // 类装饰器：标记"可被注入"
-export class UsersService {}
+export class UsersService {
+  findOne(id: string) { return id }
+}
 
 @Controller('users')   // 类装饰器：标记路由前缀
 export class UsersController {
@@ -210,8 +227,12 @@ export class UsersController {
 
   @Get(':id')                      // 方法装饰器：HTTP 方法 + 路径
   findOne(@Param('id') id: string) // 参数装饰器：从 request 里取值
+  //                   ^?
     { return this.usersService.findOne(id) }
 }
+
+@Module({ providers: [UsersService], controllers: [UsersController] })  // 类装饰器
+export class UsersModule {}
 ```
 
 规律很整齐：**类装饰器说"我是 Nest 的什么"，方法装饰器说"这个方法对应哪个 HTTP 动作"，参数装饰器说"这个参数从 request 的哪里取"。**
@@ -232,13 +253,18 @@ NestJS 内部会引，但你自己写装饰器、或者用 `Reflect.getMetadata`
 
 ### 2. 拿 interface 当依赖注入的 token
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
+import { Injectable } from '@nestjs/common'
+declare class User {}
+// ---cut---
 interface UserRepo { find(id: string): Promise<User> }
 
 @Injectable()
 class UsersService {
   // ❌ interface 编译后完全消失，design:paramtypes 里没有它
   constructor(private repo: UserRepo) {}
+//                    ^?
 }
 ```
 
@@ -246,10 +272,15 @@ class UsersService {
 
 解法：用 class（哪怕是个抽象类）当 token，或者显式指定：
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
+import { Injectable, Inject } from '@nestjs/common'
+interface UserRepo {}
+// ---cut---
 @Injectable()
 class UsersService {
   constructor(@Inject('USER_REPO') private repo: UserRepo) {}
+//                                          ^?
 }
 ```
 
@@ -315,22 +346,34 @@ me(@CurrentUser() user: User) { return user }
 
 NestJS 12（`@nestjs/core@12.0.3`）在**路由参数装饰器**上原生支持 [Standard Schema](./schema)，也就是说 zod / valibot / arktype 的 schema 可以直接挂到装饰器上：
 
-```ts
+```ts twoslash
+// @experimentalDecorators: true
 import { Body, Controller, Get, Param, Post } from '@nestjs/common'
 import { z } from 'zod'
-
+declare class UsersService {
+  create(input: { name: string; email: string }): string
+  findOne(id: number): string
+}
+// ---cut---
 const CreateUserSchema = z.object({
   name: z.string().min(1),
   email: z.email(),
 })
 
+// 类型依然是从 schema 推出来的
+type CreateUserInput = z.infer<typeof CreateUserSchema>
+//   ^?
+
 @Controller('users')
 export class UsersController {
+  constructor(private usersService: UsersService) {}
+
   @Post()
-  create(@Body({ schema: CreateUserSchema }) body: z.infer<typeof CreateUserSchema>) {
+  create(@Body({ schema: CreateUserSchema }) body: CreateUserInput) {
     return this.usersService.create(body)
   }
 
+  // 挂了 schema 之后，id 是 number（z.coerce.number() 会把字符串转成数字）
   @Get(':id')
   findOne(@Param('id', { schema: z.coerce.number().int().positive() }) id: number) {
     return this.usersService.findOne(id)
@@ -340,11 +383,14 @@ export class UsersController {
 
 装饰器只负责**挂元数据**，真正的校验要注册一个全局管道：
 
-```ts
-// main.ts
+```ts twoslash
 import { StandardSchemaValidationPipe } from '@nestjs/common'
-
-app.useGlobalPipes(new StandardSchemaValidationPipe())
+declare const app: { useGlobalPipes(...pipes: unknown[]): void }
+// ---cut---
+// main.ts
+const pipe = new StandardSchemaValidationPipe()
+//    ^?
+app.useGlobalPipes(pipe)
 ```
 
 要点：

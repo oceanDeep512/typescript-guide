@@ -147,20 +147,24 @@ import * as express from 'express' // 不开时的写法
 
 ### 3. `__dirname` 在 ESM 里不存在
 
-```ts
+```ts twoslash
+// @module: esnext
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+//    ^?
 ```
 
 要在 tsconfig 里加 `"types": ["node"]` 才能用 `node:*` 前缀。
 
 ### 4. 顶层 await
 
-```ts
+```ts twoslash
+// @module: esnext
 // ESM 才能用
 const data = await fetch('/api')
+//    ^?
 ```
 
 CJS 下会报错。需要 `module: ESNext` + `"type": "module"`。

@@ -41,7 +41,13 @@ type StreamEvent =
 
 ## 手写一个 SSE 解析器
 
-```ts
+```ts twoslash
+type StreamEvent =
+  | { type: 'delta'; text: string }
+  | { type: 'tool_call'; name: string; args: unknown }
+  | { type: 'error'; message: string }
+  | { type: 'done'; finishReason: 'stop' | 'length' }
+// ---cut---
 async function* parseSSE(
   body: ReadableStream<Uint8Array>
 ): AsyncGenerator<StreamEvent, void, unknown> {
@@ -69,6 +75,7 @@ async function* parseSSE(
         }
 
         const event = JSON.parse(payload) as StreamEvent
+        //    ^?
         yield event
       }
     }
