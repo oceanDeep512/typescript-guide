@@ -90,6 +90,9 @@ export default defineConfig({
   description: '从 tsconfig 到类型编程：一份给工程师的 TypeScript 完整教程与速查手册',
   lang: 'zh-CN',
   cleanUrls: true,
+  // VitePress 默认输出到 .vitepress/dist，但 Cloudflare / Vercel 等平台默认找 dist，
+  // 会出现 "assets.directory does not exist"。统一改成 dist，省去各平台单独配路径。
+  outDir: 'dist',
   lastUpdated: false,
   ignoreDeadLinks: true,
   appearance: 'dark',

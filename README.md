@@ -9,9 +9,25 @@
 ```bash
 npm install
 npm run dev      # 本地开发，默认 http://localhost:5173
-npm run build    # 构建到 .vitepress/dist
+npm run build    # 构建到 dist
 npm run preview  # 预览构建产物
 ```
+
+> `outDir` 在 `.vitepress/config.ts` 里显式设成了 `dist`（VitePress 默认是 `.vitepress/dist`），
+> 这样部署到 Cloudflare / Vercel 时不用单独改产物路径。
+
+## 部署（Cloudflare Pages，push 即发布）
+
+| 配置项 | 值 |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | `None` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | `/` |
+| Environment variables | `NODE_VERSION = 22` |
+
+推到 `main` 即自动构建发布；其他分支生成独立预览地址。
 
 ## 目录结构
 
