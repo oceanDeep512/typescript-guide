@@ -1,0 +1,414 @@
+/* ===================================================================
+   TypeScript 指南 · 石墨金主题 (Graphite Gold)
+   底：暖调石墨 #131211   强调：琥珀金 #f59e0b   文本：#f5f5f4
+   字体：Space Grotesk（标题）/ Manrope（正文）/ JetBrains Mono（代码）
+   =================================================================== */
+
+/* ---------- 亮色（石墨金 · 纸感）---------- */
+:root {
+  --vp-c-bg: #faf9f7;
+  --vp-c-bg-alt: #f5f3f0;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f2efe9;
+
+  --vp-c-border: #e3ded5;
+  --vp-c-divider: #e7e2d9;
+  --vp-c-gutter: #ebe6dd;
+
+  --vp-c-text-1: #1c1917;
+  --vp-c-text-2: #57534e;
+  --vp-c-text-3: #8a827a;
+
+  --vp-c-brand-1: #a16207;
+  --vp-c-brand-2: #b45309;
+  --vp-c-brand-3: #d97706;
+  --vp-c-brand-soft: rgba(161, 98, 7, 0.1);
+
+  --vp-c-default-1: #57534e;
+  --vp-c-default-2: #78716c;
+  --vp-c-default-3: #a8a29e;
+  --vp-c-default-soft: rgba(87, 83, 78, 0.08);
+
+  --vp-c-tip-1: #3f6212;
+  --vp-c-tip-2: #4d7c0f;
+  --vp-c-tip-3: #65a30d;
+  --vp-c-tip-soft: rgba(77, 124, 15, 0.1);
+
+  --vp-c-warning-1: #92400e;
+  --vp-c-warning-2: #b45309;
+  --vp-c-warning-3: #d97706;
+  --vp-c-warning-soft: rgba(180, 83, 9, 0.1);
+
+  --vp-c-danger-1: #b91c1c;
+  --vp-c-danger-2: #dc2626;
+  --vp-c-danger-3: #ef4444;
+  --vp-c-danger-soft: rgba(220, 38, 38, 0.09);
+
+  --vp-font-family-base: 'Manrope', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo,
+    Consolas, monospace;
+  --vp-font-family-display: 'Space Grotesk', 'Manrope', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+
+  --vp-layout-max-width: 1560px;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #b45309 0%, #d97706 50%, #92400e 100%);
+}
+
+/* ---------- 暗色（石墨金 · 主视觉）---------- */
+.dark {
+  --vp-c-bg: #131211;
+  --vp-c-bg-alt: #191817;
+  --vp-c-bg-elv: #201f1d;
+  --vp-c-bg-soft: #1c1b19;
+
+  --vp-c-border: #2d2b28;
+  --vp-c-divider: #292725;
+  --vp-c-gutter: #242220;
+
+  --vp-c-text-1: #f5f5f4;
+  --vp-c-text-2: #a8a29e;
+  --vp-c-text-3: #78716c;
+
+  --vp-c-brand-1: #f59e0b;
+  --vp-c-brand-2: #fbbf24;
+  --vp-c-brand-3: #d97706;
+  --vp-c-brand-soft: rgba(245, 158, 11, 0.14);
+
+  --vp-c-default-1: #a8a29e;
+  --vp-c-default-2: #78716c;
+  --vp-c-default-3: #57534e;
+  --vp-c-default-soft: rgba(168, 162, 158, 0.09);
+
+  --vp-c-tip-1: #a3e635;
+  --vp-c-tip-2: #bef264;
+  --vp-c-tip-3: #84cc16;
+  --vp-c-tip-soft: rgba(163, 230, 53, 0.1);
+
+  --vp-c-warning-1: #fbbf24;
+  --vp-c-warning-2: #fcd34d;
+  --vp-c-warning-3: #f59e0b;
+  --vp-c-warning-soft: rgba(251, 191, 36, 0.11);
+
+  --vp-c-danger-1: #f87171;
+  --vp-c-danger-2: #fca5a5;
+  --vp-c-danger-3: #ef4444;
+  --vp-c-danger-soft: rgba(248, 113, 113, 0.1);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #fcd34d 0%, #f59e0b 48%, #b45309 100%);
+}
+
+/* ---------- 排版：有主张的字号跳跃 ---------- */
+.vp-doc {
+  font-size: 15px;
+  line-height: 1.78;
+}
+.vp-doc h1 {
+  font-family: var(--vp-font-family-display);
+  font-size: clamp(28px, 3.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.024em;
+  line-height: 1.22;
+  margin-bottom: 12px;
+}
+.vp-doc h2 {
+  font-family: var(--vp-font-family-display);
+  font-size: clamp(20px, 2.2vw, 23px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 60px 0 16px;
+  padding-top: 26px;
+}
+.vp-doc h3 {
+  font-family: var(--vp-font-family-display);
+  font-size: 17.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 38px 0 10px;
+}
+.vp-doc p,
+.vp-doc li { color: var(--vp-c-text-1); }
+.vp-doc blockquote { border-radius: 8px; }
+.vp-doc a {
+  text-decoration: none;
+  border-bottom: 1px solid var(--vp-c-brand-soft);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.vp-doc a:hover { border-bottom-color: var(--vp-c-brand-1); }
+
+/* ---------- 代码块 ---------- */
+.vp-doc div[class*='language-'] {
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px solid var(--vp-c-divider);
+  overflow: hidden;
+}
+.vp-doc div[class*='language-'] code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  line-height: 1.75;
+}
+.vp-doc div[class*='language-'] .lang {
+  font-family: var(--vp-font-family-mono);
+  letter-spacing: 0.02em;
+}
+
+/* 行内代码 */
+.vp-doc :not(pre) > code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+}
+
+/* Twoslash 的报错 / 查询注解行默认继承 pre 的 white-space: pre，
+   长错误信息会撑破代码块甚至整个页面。这里改成正常换行，并取消 shiki 的 min-width: 100%。 */
+.vp-doc .twoslash-meta-line {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+/* 兜底：代码块内部超长时横向滚动，而不是撑破布局。
+   shiki 默认给 code 设了 min-width: 100%，导致长错误注解会把 code 撑到比 pre 还宽。
+   这里把 code 锁死在 pre 宽度内，让 pre 的 overflow-x: auto 真正生效。 */
+.vp-doc div[class*='language-'] pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.vp-doc div[class*='language-'] pre code {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.VPDoc .content,
+.vp-doc {
+  min-width: 0;
+}
+
+/* ---------- 表格 ---------- */
+.vp-doc table { border-radius: 12px; overflow: hidden; font-size: 14px; }
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  font-family: var(--vp-font-family-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* ---------- 自定义容器 ---------- */
+.vp-doc .custom-block.tip { border-color: var(--vp-c-brand-1); }
+.vp-doc .custom-block p { line-height: 1.7; }
+
+/* ---------- Twoslash ---------- */
+.twoslash-hover { border-bottom: 1px dotted var(--vp-c-brand-1); }
+.twoslash .twoslash-popup-container {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12.5px;
+}
+.vp-doc .twoslash-meta-line { opacity: 0.5; }
+
+/* 兜底：FloatingVue 的 popper 默认「可见」，只有 --hidden 才隐藏。
+   客户端路由切换后新页面的 popper 可能还没进入 hidden 状态就渲染出来，
+   导致整页类型提示一次性全露出来。这里改成「除非显式 shown，否则一律不可见」。 */
+.v-popper__popper:not(.v-popper__popper--shown) {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ---------- 首屏：金色光晕 + 噪点纵深 ---------- */
+.VPHero {
+  position: relative;
+  padding-top: calc(var(--vp-nav-height) + 40px);
+  padding-bottom: 8px;
+}
+.VPHero::before {
+  content: '';
+  position: absolute;
+  top: -140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1000px, 92vw);
+  height: 560px;
+  background: radial-gradient(ellipse at center,
+    rgba(245, 158, 11, 0.18) 0%,
+    rgba(245, 158, 11, 0.05) 42%,
+    transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+}
+.VPHero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 0;
+}
+.VPHero .container { position: relative; z-index: 1; }
+
+.VPHero .name {
+  font-family: var(--vp-font-family-display);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  font-size: clamp(40px, 6.4vw, 68px);
+}
+.VPHero .text {
+  font-family: var(--vp-font-family-display);
+  font-weight: 600;
+  line-height: 1.2;
+  font-size: clamp(26px, 3.6vw, 40px);
+}
+.VPHero .tagline {
+  color: var(--vp-c-text-2);
+  line-height: 1.7;
+  max-width: 560px;
+  font-size: 15px;
+}
+.VPHero .actions { margin-top: 28px; }
+.VPHero .action.brand {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.VPHero .action:hover { transform: translateY(-1px); }
+.VPFeature .title {
+  font-family: var(--vp-font-family-display);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.VPFeature .details { line-height: 1.7; }
+
+@media (prefers-reduced-motion: reduce) {
+  .VPHero .action:hover { transform: none; }
+  .vp-doc a { transition: none; }
+}
+
+/* ---------- 细节质感 ---------- */
+::selection {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-1);
+}
+:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-gutter);
+  border-radius: 10px;
+  border: 2px solid var(--vp-c-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--vp-c-border); }
+
+.VPSidebarItem.is-active > .item .link > .text { color: var(--vp-c-brand-1); }
+.VPNavBarMenuLink.active { color: var(--vp-c-brand-1); }
+
+/* ===================================================================
+   自定义组件
+   =================================================================== */
+.tcard {
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  padding: 18px 20px 14px;
+  margin: 16px 0;
+  transition: border-color 0.15s ease;
+}
+.tcard:hover { border-color: var(--vp-c-brand-1); }
+.tc-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.tc-name {
+  font-family: var(--vp-font-family-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  background: none;
+  border: none;
+  padding: 0;
+}
+.tc-badge {
+  font-size: 11px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+.tcard .tc-body > :last-child { margin-bottom: 0; }
+.tcard .tc-body p { margin: 0 0 10px; font-size: 14px; color: var(--vp-c-text-2); }
+.tcard .tc-body div[class*='language-'] { margin: 0; }
+
+.exercise {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+.ex-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--vp-c-bg-soft);
+  transition: background-color 0.15s ease;
+  min-height: 44px;
+}
+.ex-head:hover { background: var(--vp-c-brand-soft); }
+.ex-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+.exercise.level-medium .ex-tag {
+  background: var(--vp-c-warning-soft);
+  color: var(--vp-c-warning-1);
+}
+.exercise.level-hard .ex-tag {
+  background: var(--vp-c-danger-soft);
+  color: var(--vp-c-danger-1);
+}
+.ex-title { flex: 1; font-size: 14px; font-weight: 500; }
+.ex-toggle { font-size: 12px; color: var(--vp-c-text-3); }
+.ex-body { padding: 14px 18px 4px; }
+.ex-answer {
+  padding: 6px 18px 14px;
+  border-top: 1px dashed var(--vp-c-divider);
+  background: var(--vp-c-bg);
+}
+.ex-answer > :first-child { margin-top: 12px; }
+
+.callout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid var(--vp-c-divider);
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  background: var(--vp-c-bg-soft);
+}
+.callout.warn { border-left-color: var(--vp-c-warning-1); }
+.callout.danger { border-left-color: var(--vp-c-danger-1); }
+.callout-icon { flex: none; font-size: 14px; line-height: 1.7; }
+.callout-body > :first-child { margin-top: 0; }
+.callout-body > :last-child { margin-bottom: 0; }

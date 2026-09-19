@@ -1,0 +1,22 @@
+{
+  "name": "ts-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript 完整入门与类型编程教程",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "dependencies": {
+    "floating-vue": "^5.4.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@shikijs/vitepress-twoslash": "^4.4.3",
+    "typescript": "^5.7.2",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-group-icons": "^1.5.1"
+  }
+}
