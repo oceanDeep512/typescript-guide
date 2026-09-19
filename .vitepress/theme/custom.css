@@ -216,6 +216,15 @@
 }
 .vp-doc .twoslash-meta-line { opacity: 0.5; }
 
+/* 移动端：类型提示别顶出屏幕 */
+@media (max-width: 767px) {
+  .twoslash .twoslash-popup-container {
+    max-width: calc(100vw - 32px);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
 /* 兜底：FloatingVue 的 popper 默认「可见」，只有 --hidden 才隐藏。
    客户端路由切换后新页面的 popper 可能还没进入 hidden 状态就渲染出来，
    导致整页类型提示一次性全露出来。这里改成「除非显式 shown，否则一律不可见」。 */
