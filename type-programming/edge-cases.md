@@ -216,4 +216,4 @@ type A = F<boolean>
 
 ## 下一步
 
-- [调试与类型测试](./debugging)
+- [编译性能](./performance)

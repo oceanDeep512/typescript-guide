@@ -203,4 +203,5 @@ type R = MyPick<Todo, 'title'>
 
 ## 下一步
 
+- [调试与类型测试](./debugging) —— 刚学完套路，先学会自己排错，再往下走
 - [递归与元组计数](./recursion)

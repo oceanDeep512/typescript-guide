@@ -21,14 +21,25 @@ function twoslashQueryDefaultHidden() {
   }
 }
 
+// 侧栏顺序 = 推荐阅读顺序，与 guide/index.md 的「阅读路线」严格对应。
+// 末尾的「继续」分组把跨篇的后续步骤直接列出来，读者在左侧就能一路点下去。
 const guide = [
   { text: '写在前面', link: '/guide/' },
-  { text: 'TypeScript 6 与 7：换引擎了', link: '/guide/typescript-7' },
   { text: '编译流程：tsc 还是 Babel', link: '/guide/compile' },
   { text: 'tsconfig 逐项精讲', link: '/guide/tsconfig' },
+  { text: 'TypeScript 6 与 7：换引擎了', link: '/guide/typescript-7' },
   { text: '基础类型', link: '/guide/basic-types' },
   { text: '收窄与判别联合', link: '/guide/narrowing' },
   { text: 'strict 家族', link: '/guide/strict' },
+  {
+    text: '继续：跨篇路线',
+    collapsed: false,
+    items: [
+      { text: '条件类型与分发', link: '/generics/conditional' },
+      { text: '六大套路', link: '/type-programming/six-patterns' },
+      { text: '调试与类型测试', link: '/type-programming/debugging' },
+    ],
+  },
 ]
 
 const typeSystem = [
@@ -50,12 +61,13 @@ const generics = [
   { text: '内置工具类型源码', link: '/generics/utility' },
 ]
 
+// 「调试」排在「六大套路」之后：刚学完套路立刻要会自己排错，之后再进递归和边界。
 const typeProgramming = [
   { text: '类型层心智模型', link: '/type-programming/' },
   { text: '六大套路', link: '/type-programming/six-patterns' },
+  { text: '调试与类型测试', link: '/type-programming/debugging' },
   { text: '递归与元组计数', link: '/type-programming/recursion' },
   { text: 'any / unknown / never', link: '/type-programming/edge-cases' },
-  { text: '调试与类型测试', link: '/type-programming/debugging' },
   { text: '编译性能', link: '/type-programming/performance' },
 ]
 
