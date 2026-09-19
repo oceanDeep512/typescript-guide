@@ -13,9 +13,19 @@ interface Todo {
 
 type K = keyof Todo
 //   ^?
+
+// 上面显示成 `keyof Todo` 是 TS 的显示习惯——它保留了你写的原始形式。
+// 让类型真正参与一次运算，才能看到它展开后的字面量联合：
+type Keys = Exclude<K, never>
+//   ^?
 ```
 
-`keyof` 返回的是**键名的字面量联合**。
+`keyof` 返回的是**键名的字面量联合**（见上面第二个 `^?`：`"title" | "done" | "priority"`）。
+
+::: tip `^?` 显示的是原始写法？让它参与一次运算
+`keyof X`、`Step1<X>` 这类结果，TS 的 quickinfo 会**原样保留你写的表达式**，不会主动展开。
+想看真实结果，就让它再过一次类型运算——最常用的写法是 `Exclude<T, never>`（等价于把联合"摊平"一次）。
+:::
 
 几个特殊结果：
 
@@ -34,6 +44,8 @@ type D = keyof string[]
 ```
 
 `keyof Dict` 是 `string | number` 而不是 `string`，因为 JS 里 `obj[0]` 等价于 `obj['0']`。
+
+`keyof string[]` 同理：它是 `number`（下标）加上**所有数组方法名**（`"length" | "push" | "map" | ...`），因为太长，TS 这里只保留 `keyof string[]` 的写法。
 
 ### keyof 与映射类型配合
 

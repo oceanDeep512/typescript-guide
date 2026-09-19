@@ -48,6 +48,8 @@ interface Events {
 }
 type S1 = Step1<Events>
 //   ^?
+type S1Expanded = Exclude<S1, never> // 展开后的真实联合
+//   ^?
 type S2 = Step2<'onClick'>
 //   ^?
 type S3 = Step3<Events>
@@ -57,6 +59,10 @@ type S3 = Step3<Events>
 ## 3. hover 与 `//^?`
 
 IDE 里鼠标悬停是最快的手段。文档里则用 `//^?` 把结果直接写出来——本教程大量使用，你也可以在任何支持 Twoslash 的地方用。
+
+一个坑：**`^?` 显示的是 TS 的 quickinfo，它会保留你写的原始形式**。`type K = keyof Todo` 只会显示 `keyof Todo`，
+`type S = Step1<Events>` 只会显示 `keyof Events`，并不展开。想看真实结果，让类型再参与一次运算即可，
+最省事的写法是 `Exclude<T, never>`（见上面 `S1Expanded`）。
 
 ## 4. 手动传累加器看递归过程
 

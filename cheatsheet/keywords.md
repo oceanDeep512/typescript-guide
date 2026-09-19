@@ -15,6 +15,8 @@ interface Todo {
 }
 type K = keyof Todo
 //   ^?
+type KExpanded = Exclude<K, never> // 让它参与一次运算，才会展开成真实联合
+//   ^?
 type A = keyof any
 //   ^?
 ```
